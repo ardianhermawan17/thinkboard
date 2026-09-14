@@ -1,0 +1,16 @@
+{
+  "task_id": "010-task-pipeline-sse-hub",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/pipeline/hub_test.go"
+  ],
+  "commands_run": [
+    { "command": "go vet ./...", "result": "no issues" },
+    { "command": "go test ./internal/pipeline/... -v", "result": "PASS — 60 tests total in the pipeline package (50 from tasks 006-009 + 10 new: 7 hub + 3 RunContext), all passed" },
+    { "command": "go test ./... -v", "result": "PASS — 73 tests across the whole module" },
+    { "command": "go test -race ./...", "result": "FAILED to run at all: 'go: -race requires cgo; enable cgo by setting CGO_ENABLED=1'. go env shows CGO_ENABLED=0 and no gcc/clang binary is on PATH in this environment. This blocks the -race verification specifically, not the tests themselves — see task.json g5 blocked_reason and validate.json for how the concurrency design was otherwise checked." },
+    { "command": "go build ./...", "result": "success" }
+  ],
+  "summary": { "total": 73, "passed": 73, "failed": 0, "skipped": 0 },
+  "coverage_notes": "hub_test.go covers every case the doc's testing table calls for except the -race run itself: basic pub/sub delivery, replay-on-reattach filtered by seq, ring-buffer eviction at capacity, slow-subscriber drop without blocking Publish, unsubscribe idempotency (including after an already-dropped subscriber), topic Close idempotency and full subscriber teardown, a concurrent multi-goroutine Publish/Subscribe smoke test (runs cleanly under go test, just not under -race here), and RunContext's three invariants (survives parent cancel, honors its own timeout, honors its own explicit cancel)."
+}

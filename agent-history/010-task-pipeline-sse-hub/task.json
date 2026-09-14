@@ -1,0 +1,27 @@
+{
+  "id": "010-task-pipeline-sse-hub",
+  "title": "SSE run hub: detached run context, reattachable stream, bounded buffers, slow-subscriber drop (pipeline-domain-core / build order step 5)",
+  "architecture": "backend",
+  "secondary_architecture": [],
+  "created_at": "2026-09-14T04:00:00Z",
+  "status": "blocked",
+  "depends_on": ["009-task-start-run-analytic-stub"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 hub.go; §7.1 goroutine rules; §7.5 Streaming, disconnects, and the run hub; §9 build order step 5" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "Stack decision table ('streaming responses', 'goroutines handle many concurrent streaming sessions cheaply') — confirms intent, no sync/async wiring detail (checked per user request before finalizing scope)" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Detached run context helper: context.WithoutCancel(reqCtx) plus its own timeout budget, surviving the originating request's cancellation", "plan_ref": "03-backend-folder-architecture.md §7.5 ('not the request context')", "status": "done" },
+    { "id": "g2", "description": "Per-run Hub: topic per RunID, bounded ring buffer for replay-on-reattach, bounded per-subscriber channel", "plan_ref": "03-backend-folder-architecture.md §5.1 hub.go; §7.5 (map[RunID]*runTopic, subscriber set, ring buffer)", "status": "done" },
+    { "id": "g3", "description": "Slow-subscriber drop: Publish never blocks on a full subscriber channel — drops that subscriber instead", "plan_ref": "03-backend-folder-architecture.md §7.5 ('Slow subscribers are dropped, never blocked')", "status": "done" },
+    { "id": "g4", "description": "Reattach/disconnect lifecycle: Subscribe returns a replay slice + live channel + idempotent unsubscribe; Hub can Close a run's topic (all subscribers see a closed channel)", "plan_ref": "03-backend-folder-architecture.md §5.1 hub.go ('reattachable')", "status": "done" },
+    { "id": "g5", "description": "Tests covering: basic delivery, replay after a given seq, ring-buffer eviction, slow-subscriber drop without blocking Publish, unsubscribe (incl. double-unsubscribe safety), topic Close, detached context surviving parent cancellation, detached context's own timeout firing. All 10 tests pass under plain go test; the -race portion specifically is blocked", "plan_ref": "03-backend-folder-architecture.md §8 testing table ('Concurrency: hub_test.go — -race: cancellation, subscriber drop, lease contention')", "status": "blocked", "blocked_reason": "go test -race requires cgo; this environment has CGO_ENABLED=0 and no C compiler (gcc/clang) installed, so the race detector cannot run here at all, for any package. Not a code issue — the concurrency design was reviewed manually instead (see validate.json) and TestHub_ConcurrentPublishSubscribe exercises concurrent Publish/Subscribe without a race detector present to confirm it." }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

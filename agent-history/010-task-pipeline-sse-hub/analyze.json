@@ -1,0 +1,26 @@
+{
+  "task_id": "010-task-pipeline-sse-hub",
+  "phase": "analyze",
+  "started_at": "2026-09-14T04:00:00Z",
+  "completed_at": "2026-09-14T04:20:00Z",
+  "sources_read": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 pipeline/ file tree (hub.go description); §7.1 Rules (no bare go outside shared/concurrency/errgroup/supervisor); §7.5 Streaming, disconnects, and the run hub (full section); §8 testing table; §9 build order steps 4-5; §11 quick rules" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "Stack decision table (streaming responses, goroutines for concurrent streaming sessions) — read at user's request before finalizing scope; confirms intent only, no implementation-level sync/async detail beyond what 03-backend-folder-architecture.md already specifies" },
+    { "doc": "thinkboard-backend/internal/shared/concurrency/doc.go", "section": "full file — confirms concurrency/ is 'the only allowed bare-goroutine owner', not yet implemented" },
+    { "doc": "thinkboard-backend/internal/platform/config/config.go", "section": "full file — confirms no SSEBufferSize/run-timeout config exists yet; not adding one here since nothing wires Hub into httpapi/config yet" },
+    { "doc": "thinkboard-backend/internal/pipeline/service.go, run.go, point.go", "section": "full files (tasks 006-009 output) — confirms StartRun is currently fully synchronous; this task does not change it (scope confirmed with user)" }
+  ],
+  "scope": "New Go code only, in internal/pipeline: hub.go (Hub type: per-RunID topic, bounded ring-buffer replay, bounded per-subscriber channel, non-blocking Publish that drops slow subscribers, Subscribe returning replay+live+unsubscribe, Close for run-topic teardown) and a RunContext detached-context helper. No goroutines spawned by hub.go itself (Publish/Subscribe are synchronous, mutex-protected; context.WithTimeout/WithoutCancel are stdlib composition, not a spawned goroutine, so §7.1's bare-go rule is not implicated). No wiring into Service.StartRun (confirmed with user, twice, after checking 00-thinkboard-abstract-plan.md for any conflicting signal): full async execution needs orchestrator.go (not yet built, 'owns the run goroutine' per the file tree) and its own §7.1-compliant goroutine ownership (errgroup or shared/concurrency), which is a separate, larger task. No httpapi/sse/writer.go or Gin handler (that consumes Hub from the transport layer, a later task once orchestrator.go exists). No platform/config plumbing for buffer sizes (no real caller yet; Hub takes sizes as constructor args with sensible defaults).",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "RunContext(reqCtx, budget) returns a context that (a) is still live after reqCtx's own CancelFunc is called, and (b) becomes Done with context.DeadlineExceeded once budget elapses, and (c) becomes Done with context.Canceled if its own returned CancelFunc is called." },
+    { "goal_id": "g2", "text": "Hub.Publish(runID, payload) assigns a monotonically increasing Seq per run topic and stores the event in a ring buffer capped at the configured replay capacity (oldest evicted first)." },
+    { "goal_id": "g3", "text": "A subscriber whose channel is full when Publish sends to it is dropped (its channel closed, removed from the topic) instead of blocking Publish; Publish returns promptly regardless of subscriber behavior." },
+    { "goal_id": "g4", "text": "Subscribe(runID, afterSeq) returns buffered events with Seq > afterSeq as replay, plus a live channel for subsequent events, plus an idempotent unsubscribe func (safe to call more than once, including after the subscriber was already dropped by Publish). Hub.Close(runID) closes every live subscriber channel for that topic and removes it from the hub." },
+    { "goal_id": "g5", "text": "hub_test.go passes under go test -race, covering every case listed in task.json's g5 description." }
+  ],
+  "open_questions": [],
+  "risks": [
+    "Hub.topics has no automatic eviction beyond explicit Close(runID) — a caller (future orchestrator.go) that forgets to Close a finished run's topic leaks it for the process lifetime. Acceptable for this task's scope (mirrors task 009's same accepted risk for its in-memory run map); a real fix arrives with whatever task adds run-completion wiring.",
+    "Doc §7.5 says 'subscriber set under sync.RWMutex'; this implementation uses a plain sync.Mutex per topic instead, since every operation here (Publish, Subscribe, unsubscribe, Close) mutates shared state (seq/buf/subs) and none benefit from a read-only fast path — RWMutex would add no value over Mutex for this access pattern. Documented as a deliberate, non-functional deviation from the doc's literal wording, not a scope gap."
+  ]
+}

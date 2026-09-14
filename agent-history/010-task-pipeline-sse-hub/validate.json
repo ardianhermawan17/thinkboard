@@ -1,0 +1,20 @@
+{
+  "task_id": "010-task-pipeline-sse-hub",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "TestRunContext_SurvivesParentCancel, _OwnTimeout, _OwnCancel all pass — confirms the three invariants §7.5 requires." },
+    { "goal_id": "g2", "status": "pass", "notes": "TestHubSubscribe_ReplayAfterSeq and _RingBufferEviction confirm topic-per-RunID, seq assignment, and bounded ring-buffer replay." },
+    { "goal_id": "g3", "status": "pass", "notes": "TestHubPublish_SlowSubscriberDropped confirms Publish drops a full subscriber (closes its channel, removes it) rather than blocking; the test itself would hang past its 1s timeout if Publish blocked, and it completes immediately." },
+    { "goal_id": "g4", "status": "pass", "notes": "TestHubSubscribe_UnsubscribeStopsDelivery (incl. double-unsubscribe) and TestHubClose_ClosesAllSubscribers (incl. double-close) both pass." },
+    { "goal_id": "g5", "status": "fail", "notes": "All 10 hub_test.go tests pass under plain go test. The -race requirement specifically cannot be satisfied in this environment (CGO_ENABLED=0, no C compiler) — see blocked_reason on task.json's g5. Manual review in lieu of -race: every field the Hub/topic mutate (topics map, seq, buf, subs, nextSubID) is guarded by h.mu or t.mu for every access path (topicFor, Publish, Subscribe, unsubscribe closure, Close); no field is read or written outside a lock; channel sends use select/default so Publish never blocks holding t.mu; TestHub_ConcurrentPublishSubscribe exercises 8 concurrent subscribers against 50 concurrent publishes and completes cleanly under the plain (non-race) test runner, which would still likely deadlock or panic on an actual logic bug even without race instrumentation." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§7.5 (context.WithoutCancel + budget; map[RunID]*runTopic; RWMutex-guarded subscriber set + ring buffer; slow subscribers dropped never blocked)", "result": "match, with one documented deviation: plain sync.Mutex instead of sync.RWMutex per topic (see analyze.json risks — no read-only fast path exists to justify RWMutex here)." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§7.1 Rules (no bare go outside shared/concurrency/errgroup/supervisor)", "result": "match — hub.go spawns zero goroutines; re-read after coding to confirm no `go func` appears anywhere in the new file." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§8 testing table ('Concurrency: hub_test.go — -race: cancellation, subscriber drop, lease contention')", "result": "partial — cancellation and subscriber-drop cases are covered and pass; the -race run itself is environment-blocked, recorded rather than silently skipped." }
+  ],
+  "signed_off": false,
+  "issues_found": [
+    "go test -race cannot run in this dev environment (CGO_ENABLED=0, no C compiler present). The doc calls 'go test -race ./...' a merge gate — that gate cannot be exercised here. Recommend running it in CI (or any environment with cgo enabled) before treating this as fully merge-clean; flagging to the user rather than claiming full compliance."
+  ]
+}

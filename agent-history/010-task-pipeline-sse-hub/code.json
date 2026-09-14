@@ -1,0 +1,25 @@
+{
+  "task_id": "010-task-pipeline-sse-hub",
+  "phase": "code",
+  "started_at": "2026-09-14T04:20:00Z",
+  "completed_at": "2026-09-14T04:50:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/pipeline/hub.go", "action": "created", "summary": "RunContext (detached-context helper, DefaultRunBudget=15min), Hub (per-RunID topic, bounded ring-buffer replay, bounded per-subscriber channel), Publish (non-blocking, drops slow subscribers), Subscribe (replay + live channel + idempotent unsubscribe), Close (tears down a run's topic, closes all subscriber channels)." },
+    { "path": "thinkboard-backend/internal/pipeline/hub_test.go", "action": "created", "summary": "10 tests: basic delivery, replay-after-seq, ring-buffer eviction, slow-subscriber drop, unsubscribe (incl. double-unsubscribe), Close (incl. double-close), a concurrent Publish/Subscribe smoke test, and 3 RunContext tests (survives parent cancel, own timeout, own explicit cancel)." }
+  ],
+  "decisions": [
+    "No goroutines spawned by hub.go (confirmed by design, not just by luck): Publish/Subscribe/Close are synchronous and mutex-protected; context.WithTimeout/WithoutCancel are stdlib composition. This keeps the file entirely outside §7.1's 'no bare go outside shared/concurrency' rule.",
+    "Used plain sync.Mutex per topic instead of the doc's literal sync.RWMutex wording — every operation here mutates shared state, so RWMutex would add complexity with no read-only fast path to justify it. Documented as a deliberate non-functional deviation, not a scope gap (see analyze.json risks).",
+    "No wiring into Service.StartRun or httpapi (confirmed twice with user, after checking 00-thinkboard-abstract-plan.md for any conflicting signal): this task delivers the Hub mechanism itself ('the streaming contract'), not the async orchestrator/SSE-handler wiring that consumes it.",
+    "Event.Payload is 'any' (opaque) — Hub is content-agnostic; real event shapes arrive once orchestrator.go actually publishes to a Hub."
+  ],
+  "commands_run": [
+    "gofmt -l -w internal/pipeline",
+    "go vet ./...",
+    "go build ./...",
+    "go test ./internal/pipeline/... -v -run TestHub",
+    "go test -race ./... (FAILED: 'go: -race requires cgo; enable cgo by setting CGO_ENABLED=1' — environment has CGO_ENABLED=0, no gcc/clang found)",
+    "go test ./internal/pipeline/... -v",
+    "go test ./..."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "010-task-pipeline-sse-hub",
+  "phase": "result",
+  "closed_at": "2026-09-14T05:00:00Z",
+  "final_status": "blocked",
+  "goals_summary": { "total": 5, "done": 4, "blocked": 1 },
+  "artifacts": [
+    "thinkboard-backend/internal/pipeline/hub.go",
+    "thinkboard-backend/internal/pipeline/hub_test.go"
+  ],
+  "follow_up_tasks": [
+    "Run `go test -race ./...` in a cgo-enabled environment (e.g. CI, or a local machine with gcc/clang installed) to satisfy 03-backend-folder-architecture.md §7.1's merge-gate requirement before treating this task as fully clean — no code change expected, just the verification this environment couldn't run."
+  ]
+}

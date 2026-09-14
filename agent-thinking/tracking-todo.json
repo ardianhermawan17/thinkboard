@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-14T03:45:00Z",
+  "updated_at": "2026-09-14T05:00:00Z",
   "tracked_todos": [
     {
       "id": "005-todo-swagger-backend-api",
@@ -17,6 +17,14 @@
       "todo_path": "agent-thinking/todo/009-todo-start-run-analytic-stub/contract.json",
       "agent_history": "agent-history/009-task-start-run-analytic-stub",
       "status": "done"
+    },
+    {
+      "id": "010-todo-pipeline-sse-hub",
+      "name": "SSE run hub: detached context, reattach, bounded buffers, slow-subscriber drop",
+      "goal": "Build the per-run SSE Hub (build order step 5's streaming contract) with a detached run context, replay-on-reattach, bounded subscriber buffers, and slow-subscriber drop, standalone from StartRun/httpapi.",
+      "todo_path": "agent-thinking/todo/010-todo-pipeline-sse-hub/contract.json",
+      "agent_history": "agent-history/010-task-pipeline-sse-hub",
+      "status": "in_progress"
     }
   ]
 }
