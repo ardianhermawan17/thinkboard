@@ -8,7 +8,7 @@
     { "command": "go vet ./...", "result": "no issues" },
     { "command": "go test ./internal/pipeline/... -v", "result": "PASS — 60 tests total in the pipeline package (50 from tasks 006-009 + 10 new: 7 hub + 3 RunContext), all passed" },
     { "command": "go test ./... -v", "result": "PASS — 73 tests across the whole module" },
-    { "command": "go test -race ./...", "result": "FAILED to run at all: 'go: -race requires cgo; enable cgo by setting CGO_ENABLED=1'. go env shows CGO_ENABLED=0 and no gcc/clang binary is on PATH in this environment. This blocks the -race verification specifically, not the tests themselves — see task.json g5 blocked_reason and validate.json for how the concurrency design was otherwise checked." },
+    { "command": "go test -race ./...", "result": "PREVIOUSLY FAILED to run at all: 'go: -race requires cgo; enable cgo by setting CGO_ENABLED=1' — CGO_ENABLED=0 and no gcc/clang on PATH. RESOLVED 2026-09-14: installed a C toolchain (`scoop install gcc`, nuwen mingw 15.2.0) into this environment, then reran with CGO_ENABLED=1 and PATH including scoop's gcc bin. `go test -race ./internal/pipeline/...` and `go test -race ./...` (whole module) both PASS with zero data races reported. See updated validate.json/task.json g5." },
     { "command": "go build ./...", "result": "success" }
   ],
   "summary": { "total": 73, "passed": 73, "failed": 0, "skipped": 0 },

@@ -2,13 +2,13 @@
   "task_id": "010-task-pipeline-sse-hub",
   "phase": "result",
   "closed_at": "2026-09-14T05:00:00Z",
-  "final_status": "blocked",
-  "goals_summary": { "total": 5, "done": 4, "blocked": 1 },
+  "reopened_at": "2026-09-14T06:00:00Z",
+  "final_status": "done",
+  "goals_summary": { "total": 5, "done": 5, "blocked": 0 },
   "artifacts": [
     "thinkboard-backend/internal/pipeline/hub.go",
     "thinkboard-backend/internal/pipeline/hub_test.go"
   ],
-  "follow_up_tasks": [
-    "Run `go test -race ./...` in a cgo-enabled environment (e.g. CI, or a local machine with gcc/clang installed) to satisfy 03-backend-folder-architecture.md §7.1's merge-gate requirement before treating this task as fully clean — no code change expected, just the verification this environment couldn't run."
-  ]
+  "unblock_note": "Reopened to resolve g5: installed a C toolchain (scoop install gcc, nuwen mingw-w64 15.2.0) into this worktree's environment so CGO_ENABLED=1 could be set. `go test -race ./internal/pipeline/...` and `go test -race ./...` (whole module) both pass with zero races reported. No code changes were needed — this was purely an environment-verification gap. Task now fully clean per 03-backend-folder-architecture.md §7.1's merge gate.",
+  "follow_up_tasks": []
 }
