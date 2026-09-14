@@ -1,0 +1,26 @@
+{
+  "task_id": "009-task-start-run-analytic-stub",
+  "phase": "analyze",
+  "started_at": "2026-09-14T03:00:00Z",
+  "completed_at": "2026-09-14T03:15:00Z",
+  "sources_read": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 pipeline/ file tree + handler example (StartRun/StartRunCmd/StartRunResponse shape); §5.3 llm/service.go ('Complete/Stream — the only API pipeline sees'); §7.2 sequential-by-data-dependency; §8 testing table; §9 build order steps 3-4" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "pipeline stage table (Analytic: 'decomposes input into atomic points'); §9 step 2 (stubbed LLM)" },
+    { "doc": "thinkboard-backend/internal/pipeline/run.go, stage.go, point.go", "section": "full files (tasks 006-008 output) — Run.Start/Advance semantics, Order, Point/NewPoint" },
+    { "doc": "thinkboard-backend/internal/shared/kernel/ids.go", "section": "full file — RunID/PointID convention" },
+    { "doc": "thinkboard-backend/internal/shared/clock/clock.go", "section": "full file — Clock convention, reused for StartRun's 'now'" },
+    { "doc": "thinkboard-backend/internal/httpapi/middleware/requestid.go", "section": "uuid.NewString() usage — existing convention for generating string IDs, reused for RunID/PointID generation instead of adding a new ID strategy" }
+  ],
+  "scope": "New Go code only, in internal/pipeline: an LLM interface (deps.go) with a minimal Complete(ctx, prompt) (string, error) method; a stubbed analytic stage function; Service + StartRun wiring them together with Run/Point from tasks 006-008. No Store interface (confirmed with user: in-memory Service state only). No orchestrator.go/stages subpackage (confirmed: sequencing stays inline in service.go, same reasoning as task 006's deferred stages/ subpackage — avoids the Stage-type import cycle and is unjustified machinery for one stage handler). No real LLM provider, no Postgres, no Gin/HTTP wiring, no SSE/hub (build order step 5+), no Retriever/Memory/Personas interfaces (unused until later stages). StartRunCmd gets a Content field (confirmed with user) since nothing else sources input for the analytic stage yet.",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "LLM interface has exactly one method, Complete(ctx context.Context, prompt string) (string, error), matching llm/service.go's eventual real shape closely enough to swap in later without changing callers." },
+    { "goal_id": "g2", "text": "runAnalytic(ctx, llm, content) calls llm.Complete once and wraps the result in a single root Point (via NewPoint) with position 0; propagates LLM errors without wrapping in a Point." },
+    { "goal_id": "g3", "text": "StartRun: rejects empty cmd.Content before creating a Run; otherwise creates a Run (uuid-generated RunID), Start()s it (cursor -> scope_anchor), Advance()s once (cursor -> analytic, no handler run for scope_anchor), runs the analytic stub, and on success Advance()s again (cursor -> research) recording the run+point in an in-memory map; on LLM failure calls Run.Fail and still records the failed run, returning the error." },
+    { "goal_id": "g4", "text": "service_test.go uses a fake LLM (a func-backed test double) covering: success (returns RunID, run recorded as running at 'research', one point recorded), LLM error (run recorded as failed, error returned), empty content (rejected before any Run is created)." }
+  ],
+  "open_questions": [],
+  "risks": [
+    "The in-memory Service state (map[RunID]->{run, points}) has no eviction and is not concurrency-load-tested beyond a basic mutex guard — acceptable for an orchestration-shape stub with no real traffic; a real store_pg.go replaces this entirely in a later task rather than this map growing unbounded in production.",
+    "runAnalytic always produces exactly one Point regardless of LLM output structure — real decomposition (parsing structured multi-point output) is deferred to build order step 6 (real llm/ package) since inventing that parsing logic now would be speculative against an LLM contract that doesn't exist yet."
+  ]
+}

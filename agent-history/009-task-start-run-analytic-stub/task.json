@@ -1,0 +1,27 @@
+{
+  "id": "009-task-start-run-analytic-stub",
+  "title": "StartRun service with one stubbed analytic stage, fake LLM dependency (pipeline-domain-core / build order step 4)",
+  "architecture": "backend",
+  "secondary_architecture": [],
+  "created_at": "2026-09-14T03:00:00Z",
+  "status": "done",
+  "depends_on": ["008-task-pipeline-value-objects"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 service.go/deps.go; §9 build order step 4 ('StartRun + analytic stage vs. a stubbed LLM — orchestration shape')" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "§9 step 2 (stubbed LLM); Analytic stage definition (decomposes input into atomic points)" },
+    { "doc": "02-working.md", "section": "§5 architecture categorization" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Define a minimal LLM interface (deps.go) with a Complete method, used by the analytic stage stub; no real provider", "plan_ref": "03-backend-folder-architecture.md §5.1 deps.go; §5.3 llm/service.go Complete/Stream shape", "status": "done" },
+    { "id": "g2", "description": "Implement a stubbed analytic stage handler that calls LLM.Complete and produces a Point from the result", "plan_ref": "00-thinkboard-abstract-plan.md Analytic stage ('decomposes input into atomic points')", "status": "done" },
+    { "id": "g3", "description": "Implement pipeline.Service.StartRun(ctx, StartRunCmd) (kernel.RunID, error): creates a Run, starts it, advances past scope_anchor (no handler yet), runs the analytic stub, advances past analytic, keeps state in-memory", "plan_ref": "03-backend-folder-architecture.md §5.1 service.go StartRun; §9 build order step 4", "status": "done" },
+    { "id": "g4", "description": "Service unit tests using a fake LLM (table-driven where useful): success path, LLM failure path, empty-content rejection", "plan_ref": "03-backend-folder-architecture.md §8 testing table ('Service unit: pipeline/service_test.go — fakes for the interfaces in deps.go')", "status": "done" }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

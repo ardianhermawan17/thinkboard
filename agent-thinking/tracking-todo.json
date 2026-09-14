@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-14T01:00:00Z",
+  "updated_at": "2026-09-14T03:45:00Z",
   "tracked_todos": [
     {
       "id": "005-todo-swagger-backend-api",
@@ -8,6 +8,14 @@
       "goal": "Document the backend's real route surface via OpenAPI/Swagger and reconcile thinkboard-backend/api/api.json with it, validated by a test login using admin@gmail.com / password.",
       "todo_path": "agent-thinking/todo/005-todo-swagger-backend-api/contract.json",
       "agent_history": "agent-history/005-task-swagger-openapi-docs",
+      "status": "done"
+    },
+    {
+      "id": "009-todo-start-run-analytic-stub",
+      "name": "StartRun service with stub analytic stage",
+      "goal": "Implement pipeline.Service.StartRun driving one stubbed analytic stage through a fake LLM dependency, no real provider and no DB, proving the orchestration shape from build order step 4.",
+      "todo_path": "agent-thinking/todo/009-todo-start-run-analytic-stub/contract.json",
+      "agent_history": "agent-history/009-task-start-run-analytic-stub",
       "status": "done"
     }
   ]

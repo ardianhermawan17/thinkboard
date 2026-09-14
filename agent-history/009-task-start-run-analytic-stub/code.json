@@ -1,0 +1,27 @@
+{
+  "task_id": "009-task-start-run-analytic-stub",
+  "phase": "code",
+  "started_at": "2026-09-14T03:15:00Z",
+  "completed_at": "2026-09-14T03:40:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/pipeline/deps.go", "action": "created", "summary": "LLM interface: Complete(ctx, prompt string) (string, error). Retriever/Memory/Personas intentionally not added — unused until a later stage needs them." },
+    { "path": "thinkboard-backend/internal/pipeline/analytic.go", "action": "created", "summary": "runAnalytic(ctx, llm, runID, content) — one LLM.Complete call wrapped as a single root Point via NewPoint." },
+    { "path": "thinkboard-backend/internal/pipeline/service.go", "action": "created", "summary": "StartRunCmd (SessionID, Mode, Content), Service (llm, clock, in-memory runs map + mutex), NewService, StartRun (validates Content, creates+starts Run, advances past scope_anchor, runs analytic stub, advances past analytic on success or Fails the run on LLM error, records state), RunState accessor for callers/tests." },
+    { "path": "thinkboard-backend/internal/pipeline/service_test.go", "action": "created", "summary": "fakeLLM + fakeClock test doubles; TestServiceStartRun_Success, _LLMError, _EmptyContent." }
+  ],
+  "decisions": [
+    "No Store interface (confirmed with user): Service keeps run/point state in an internal map[RunID]*runRecord guarded by a mutex, exposed only via RunState(). Avoids a single-implementation interface; store.go/store_pg.go come with whatever future task actually persists to Postgres.",
+    "StartRunCmd.Content added (confirmed with user): analytic needs input and no memory/message layer exists yet to source it.",
+    "scope_anchor is handled by one Run.Advance() call with no stage handler or persisted work, since Run.Start() always sets the cursor to Order[0] (task 007 invariant) and the real context-warning gate is a later task (build order step 9).",
+    "No orchestrator.go or stages/ subpackage: sequencing (Start -> Advance -> analytic -> Advance) is inline in StartRun. Same reasoning as task 006's deferred stages/ subpackage — one handler doesn't justify the generic Stage->Handler dispatch machinery, and it would reintroduce the Stage-type import-cycle problem noted there.",
+    "On LLM failure, StartRun still returns the created run's (now failed) RunID alongside the error, rather than an empty ID — the run row conceptually exists and is marked failed, so a caller/test can still look it up via RunState. Deviates slightly from the 'zero value on error' Go convention but matches the domain: the resource was created before the failure.",
+    "runAnalytic always produces exactly one Point regardless of LLM output content — real multi-point decomposition depends on internal/llm's actual response contract (build order step 6, not yet built)."
+  ],
+  "commands_run": [
+    "gofmt -l -w internal/pipeline",
+    "go vet ./...",
+    "go test ./...",
+    "go test ./internal/pipeline/... -v",
+    "go build ./..."
+  ]
+}

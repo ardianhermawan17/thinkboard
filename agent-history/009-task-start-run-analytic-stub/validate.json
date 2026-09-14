@@ -1,0 +1,17 @@
+{
+  "task_id": "009-task-start-run-analytic-stub",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "LLM interface has exactly one method (Complete), matching the doc's stated llm/service.go shape closely enough to swap in later." },
+    { "goal_id": "g2", "status": "pass", "notes": "runAnalytic calls llm.Complete once, wraps the result as a single root Point via NewPoint (reusing task 008's constructor/invariants), propagates errors unwrapped." },
+    { "goal_id": "g3", "status": "pass", "notes": "StartRun's sequence verified in TestServiceStartRun_Success: Run ends at CurrentStage=Research (Order[2], i.e. past scope_anchor and analytic), Status=running, one Point recorded." },
+    { "goal_id": "g4", "status": "pass", "notes": "go test ./internal/pipeline/... -v: 50 passed, 0 failed, including all 3 new service_test.go cases." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 service.go / deps.go; handler example (StartRunCmd{SessionID, Mode}, returns (RunID, error))", "result": "match — StartRun's signature and StartRunCmd's SessionID/Mode fields match the doc's shown handler example exactly; Content is an additive field the doc's illustrative snippet didn't need to show." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§9 build order step 4 ('StartRun + analytic stage vs. a stubbed LLM — orchestration shape')", "result": "match — no real LLM provider, no DB, no Gin/HTTP; proves the Service -> Run -> stage-stub -> in-memory-state shape only." },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "Analytic stage ('decomposes input into atomic points')", "result": "match for stub purposes — real multi-point decomposition explicitly deferred (see code.json decisions), documented rather than silently simplified." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}

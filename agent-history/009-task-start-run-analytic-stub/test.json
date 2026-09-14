@@ -1,0 +1,15 @@
+{
+  "task_id": "009-task-start-run-analytic-stub",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/pipeline/service_test.go"
+  ],
+  "commands_run": [
+    { "command": "go vet ./...", "result": "no issues" },
+    { "command": "go test ./internal/pipeline/... -v", "result": "PASS — 50 tests total in the pipeline package (47 from tasks 006-008 + 3 new service tests), all passed" },
+    { "command": "go test ./... -v", "result": "PASS — 63 tests across the whole module" },
+    { "command": "go build ./...", "result": "success" }
+  ],
+  "summary": { "total": 63, "passed": 63, "failed": 0, "skipped": 0 },
+  "coverage_notes": "Service unit tests per 03-backend-folder-architecture.md §8's 'fakes for the interfaces in deps.go' rule: success (RunID returned, run running at research cursor, one point recorded), LLM error (run recorded as failed, error propagated, no points), empty content (rejected before any Run is created, empty RunID returned)."
+}

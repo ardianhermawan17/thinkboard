@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-14T02:30:00Z",
+  "updated_at": "2026-09-14T03:45:00Z",
   "current_task_id": null,
   "current_phase": "idle",
-  "history_path": "agent-history/008-task-pipeline-value-objects",
+  "history_path": "agent-history/009-task-start-run-analytic-stub",
   "status": "idle",
   "task_sequence": [
     { "id": "001-task-backend-gateway-scaffolding", "architecture": "backend", "status": "done", "title": "Backend folder structure + Gin scaffolding in thinkboard-backend/" },
@@ -14,6 +14,7 @@
     { "id": "006-task-pipeline-stage-machine", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Stage type, canonical order, forward-transition rules (pipeline-domain-core)" },
     { "id": "006-task-document-supabase-login-swagger", "architecture": "backend", "status": "done", "title": "Document Supabase Auth login in Swagger only, no gateway proxy (concurrent session; note: duplicate 006 number — two independent sessions claimed 006 before either saw the other's push, see task 007's PR discussion)" },
     { "id": "007-task-pipeline-run-model", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Run, RunStatus, stage cursor, start/advance/fail/cancel invariants (pipeline-domain-core)" },
-    { "id": "008-task-pipeline-value-objects", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Temperature VO, Point parent/child shape (pipeline-domain-core)" }
+    { "id": "008-task-pipeline-value-objects", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Temperature VO, Point parent/child shape (pipeline-domain-core)" },
+    { "id": "009-task-start-run-analytic-stub", "architecture": "backend", "status": "done", "title": "StartRun service + stubbed analytic stage, fake LLM dependency (build order step 4)" }
   ]
 }
