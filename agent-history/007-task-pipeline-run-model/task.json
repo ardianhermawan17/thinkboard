@@ -1,0 +1,27 @@
+{
+  "id": "007-task-pipeline-run-model",
+  "title": "Pipeline run model: Run, RunStatus, stage cursor, start/advance/fail/cancel invariants (pipeline-domain-core)",
+  "architecture": "backend",
+  "secondary_architecture": [],
+  "created_at": "2026-09-14T01:00:00Z",
+  "status": "done",
+  "depends_on": ["006-task-pipeline-stage-machine"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 run.go ('Run: state + invariants (status, stage cursor, mode). No I/O.'); §10 build order step 3" },
+    { "doc": "thinkboard-schema-final.sql", "section": "pipeline_runs table + run_status/session_mode enums, lines 17, 245-254" },
+    { "doc": "02-working.md", "section": "§7.3 pipeline-stage transitions cannot reach validate with zero tests" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Define RunStatus mirroring the run_status Postgres enum, and a Mode type mirroring session_mode", "plan_ref": "thinkboard-schema-final.sql run_status/session_mode enums", "status": "done" },
+    { "id": "g2", "description": "Define Run struct: ID, SessionID, Mode, Status, CurrentStage (stage cursor, reusing pipeline.Stage/Order from task 006), StartedAt, FinishedAt", "plan_ref": "thinkboard-schema-final.sql pipeline_runs columns; 03-backend-folder-architecture.md §5.1 run.go", "status": "done" },
+    { "id": "g3", "description": "Implement pure invariant methods Start/Advance/Fail/Cancel with no I/O and no time.Now() (caller-supplied now, per shared/clock convention)", "plan_ref": "03-backend-folder-architecture.md §4 import rules ('No time.Now() outside shared/clock'); §5.1 run.go", "status": "done" },
+    { "id": "g4", "description": "Table-driven tests covering valid and invalid transitions for all four methods, pure behavior only (no DB, no LLM)", "plan_ref": "02-working.md §7.3; 03-backend-folder-architecture.md §8 test gate", "status": "done" }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

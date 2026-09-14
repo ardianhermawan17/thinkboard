@@ -1,0 +1,17 @@
+{
+  "task_id": "007-task-pipeline-run-model",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "RunStatus's 5 constants and Mode's 3 constants match run_status/session_mode enum values and order exactly." },
+    { "goal_id": "g2", "status": "pass", "notes": "Run fields map to pipeline_runs' id/session_id/mode/status/started_at/finished_at, plus CurrentStage as the in-process cursor (documented as not a DB column)." },
+    { "goal_id": "g3", "status": "pass", "notes": "Start/Advance/Fail/Cancel take an explicit 'now time.Time' parameter and never call time.Now(); all four are plain field mutations with status guards, no I/O." },
+    { "goal_id": "g4", "status": "pass", "notes": "go test ./internal/pipeline/... -v: 36 passed, 0 failed, covering every method's valid and invalid-status cases." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "thinkboard-schema-final.sql", "section": "run_status/session_mode enums; pipeline_runs columns", "result": "match — re-read after coding, constants and fields are a literal transcription." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 run.go spec ('Run: state + invariants (status, stage cursor, mode). No I/O.')", "result": "match — no I/O, no imports beyond stdlib + shared/kernel; Stage cursor reuses task 006's Order/indexOf rather than re-declaring stage sequence." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§4 import rules ('No time.Now() outside shared/clock')", "result": "match — Run never calls time.Now(); callers (future service.go/orchestrator.go, or tests) supply now via clock.Clock.Now()." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}
