@@ -1,0 +1,28 @@
+{
+  "task_id": "006-task-pipeline-stage-machine",
+  "phase": "analyze",
+  "started_at": "2026-09-14T00:00:00Z",
+  "completed_at": "2026-09-14T00:10:00Z",
+  "sources_read": [
+    { "doc": "thinkboard-schema-final.sql", "section": "pipeline_stage enum, lines 20-30" },
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 pipeline/ domain core file tree + registry rule; §7.2 sequential-by-data-dependency; §8 test gate; §10 build order; §11 quick rules" },
+    { "doc": "02-working.md", "section": "§5 architecture categorization; §6 goal tracking; §7.3 test-phase rule" },
+    { "doc": "thinkboard-backend/internal/pipeline/doc.go", "section": "full file (stub)" },
+    { "doc": "thinkboard-backend/internal/pipeline/stages/doc.go", "section": "full file (stub)" },
+    { "doc": "thinkboard-backend/go.mod", "section": "full file (module path, Go 1.25.3, no test framework dep beyond stdlib)" },
+    { "doc": "thinkboard-backend/internal/auth/jwt_test.go", "section": "existing test style (plain stdlib testing, table-driven, t.Helper())" }
+  ],
+  "scope": "New Go domain types only, in internal/pipeline: a Stage type, the canonical 7-stage order, and a pure forward-transition check, plus a table-driven test. No orchestrator, no run.go/service.go, no stage handlers, no stages/ subpackage, no I/O, no HTTP wiring, no LLM calls. Matches build-order step 3 ('pipeline/ domain core: run.go, stage.go, transition.go + tests — the state machine, no I/O') minus run.go, which is a separate future task not covered by this task's stated focus.",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "Stage constants exactly match the 7 pipeline_stage enum values and order from thinkboard-schema-final.sql: scope_anchor, analytic, research, validation, questioning, research_scoped, result." },
+    { "goal_id": "g2", "text": "Exactly one exported declaration in the package enumerates stage order; no other file/function in the diff repeats the sequence as a literal list." },
+    { "goal_id": "g3", "text": "Allowed(from, to) is true only when to is the immediate successor of from in the canonical order; false for backward, skip, self, and any invalid Stage value." },
+    { "goal_id": "g4", "text": "transition_test.go is table-driven, covers all 6 valid forward pairs, and covers rejected backward/skip/self/unknown cases; go test passes." }
+  ],
+  "open_questions": [
+    "03-backend-folder-architecture.md §5.1's file tree puts stage.go and transition.go directly under internal/pipeline/, but puts registry.go (\"the ONLY declaration of stage order\") under the internal/pipeline/stages/ subpackage. Taken literally that's a package cycle: stages/registry.go needs pipeline.Stage (child importing parent), and transition.go would need to read order from stages/registry.go (parent importing child). Resolution used here: since build-order step 3 (§10) scopes this task to run.go/stage.go/transition.go only — no stages/ subpackage, no handlers — the canonical order is declared once in internal/pipeline/stage.go itself (the only place in this diff that lists the 7 stages), and transition.go derives Allowed() from that slice instead of repeating it. The literal stages/registry.go (map[Stage]Handler) is deferred to the task that adds the first real stage handler (build-order step 4+), which should import internal/pipeline for Stage/Order rather than redeclaring them. Flagging this instead of silently building the stages/ subpackage now, since the user's stated task focus (Stage, canonical order, forward transitions, registry-as-only-order-source) is fully satisfied without it and adding an empty subpackage would be speculative scaffolding."
+  ],
+  "risks": [
+    "If a later task creates internal/pipeline/stages/registry.go without importing this task's Order/Stage, the codebase would end up with two declarations of stage order, breaking the single-source rule this task establishes."
+  ]
+}

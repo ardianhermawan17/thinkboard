@@ -1,0 +1,21 @@
+{
+  "task_id": "006-task-pipeline-stage-machine",
+  "phase": "code",
+  "started_at": "2026-09-14T00:10:00Z",
+  "completed_at": "2026-09-14T00:20:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/pipeline/stage.go", "action": "created", "summary": "Stage string type mirroring the 7-value pipeline_stage enum; exported Order slice as the single canonical-order declaration." },
+    { "path": "thinkboard-backend/internal/pipeline/transition.go", "action": "created", "summary": "Pure Allowed(from, to Stage) bool: true only for the immediate-successor pair in Order; derives from Order, no hardcoded sequence." },
+    { "path": "thinkboard-backend/internal/pipeline/transition_test.go", "action": "created", "summary": "Table-driven tests: all 6 valid forward transitions, plus backward/skip/self/unknown-stage rejections, plus an Order-matches-canonical-sequence check." },
+    { "path": "thinkboard-backend/internal/pipeline/doc.go", "action": "modified", "summary": "Dropped stale 'Not yet implemented'; noted Stage/Order/Allowed now exist, orchestration still doesn't. Kept as the sole package-doc-comment file, matching the doc.go convention used by internal/auth, internal/llm, etc." }
+  ],
+  "decisions": [
+    "internal/pipeline/stages/ subpackage and registry.go (map[Stage]Handler) are not created in this task — deferred to the first task that adds a real stage handler, per the open_question in analyze.json. This task's Order in stage.go is the single order source those future files must import rather than redeclare."
+  ],
+  "commands_run": [
+    "gofmt -l -w internal/pipeline",
+    "go vet ./internal/pipeline/...",
+    "go test ./internal/pipeline/... -v",
+    "go build ./..."
+  ]
+}

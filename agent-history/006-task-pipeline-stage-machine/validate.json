@@ -1,0 +1,17 @@
+{
+  "task_id": "006-task-pipeline-stage-machine",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "stage.go's 7 constants match thinkboard-schema-final.sql's pipeline_stage enum values and order exactly (scope_anchor, analytic, research, validation, questioning, research_scoped, result)." },
+    { "goal_id": "g2", "status": "pass", "notes": "Order in stage.go is the only literal list of the 7 stages in the diff. transition_test.go's 'want' slice is a test assertion re-deriving the expected order to check Order against the spec, not a second production source; it exists to catch drift, matching how other Go tests assert against a constant elsewhere in this repo (e.g. authorizer_test.go's expected-claims tables)." },
+    { "goal_id": "g3", "status": "pass", "notes": "Allowed() has no literal (from,to) pairs — it only calls indexOf() against Order twice, so it can't drift from the declared sequence." },
+    { "goal_id": "g4", "status": "pass", "notes": "transition_test.go: 6/6 valid forward pairs true, plus backward/skip/self/unknown-from/unknown-to all false. go test ./internal/pipeline/... -v: 14 passed, 0 failed." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "thinkboard-schema-final.sql", "section": "pipeline_stage enum (lines 20-30)", "result": "match — re-read after coding; stage.go constants are a literal 1:1 transcription." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§7.2 sequential-by-data-dependency ('each consumes the previous stage's output', 'one at a time per run')", "result": "match — Allowed() enforces strictly one-step-forward, no skipping and no parallel-stage advancement, consistent with the chain model." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 registry-is-only-order-source rule", "result": "satisfied for this task's scope; the literal stages/registry.go file is intentionally deferred — see analyze.json open_questions for the import-cycle reasoning and the note that future stage-handler tasks must import this package's Order rather than redeclare it." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}

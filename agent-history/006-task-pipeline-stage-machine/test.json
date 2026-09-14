@@ -1,0 +1,14 @@
+{
+  "task_id": "006-task-pipeline-stage-machine",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/pipeline/transition_test.go"
+  ],
+  "commands_run": [
+    { "command": "go vet ./internal/pipeline/...", "result": "no issues" },
+    { "command": "go test ./internal/pipeline/... -v", "result": "PASS — TestAllowed (12 subtests) + TestOrderIsCanonicalSequence, 14 tests total across the module run, all passed" },
+    { "command": "go build ./...", "result": "success, whole thinkboard-backend module still builds" }
+  ],
+  "summary": { "total": 14, "passed": 14, "failed": 0, "skipped": 0 },
+  "coverage_notes": "Per 02-working.md §7.3, pipeline-stage transitions cannot reach validate with zero automated tests. transition_test.go covers all 6 valid forward pairs plus backward, skip, self, and unknown-Stage rejections, and separately asserts Order equals the exact canonical 7-stage sequence from the schema enum."
+}

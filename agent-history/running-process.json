@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-14T01:00:00Z",
+  "updated_at": "2026-09-14T00:30:00Z",
   "current_task_id": null,
   "current_phase": "idle",
-  "history_path": "agent-history/005-task-swagger-openapi-docs",
+  "history_path": "agent-history/006-task-pipeline-stage-machine",
   "status": "idle",
   "task_sequence": [
     { "id": "001-task-backend-gateway-scaffolding", "architecture": "backend", "status": "done", "title": "Backend folder structure + Gin scaffolding in thinkboard-backend/" },
     { "id": "002-task-backend-supabase-login", "architecture": "backend", "status": "cancelled", "title": "Simple email/password login endpoint proxying to Supabase Auth (rolled back — contradicted §1 ownership rules)" },
     { "id": "003-task-backend-auth-authorization", "architecture": "backend", "status": "done", "title": "Full internal/auth: Supabase JWT verification + team-membership authorization (RLS mirror)" },
     { "id": "004-task-postman-api-collection", "architecture": "backend", "status": "done", "title": "Create Postman API collection for current backend auth surface" },
-    { "id": "005-task-swagger-openapi-docs", "architecture": "backend", "status": "done", "title": "Add Swagger/OpenAPI docs to thinkboard-backend and sync api.json" }
+    { "id": "005-task-swagger-openapi-docs", "architecture": "backend", "status": "done", "title": "Add Swagger/OpenAPI docs to thinkboard-backend and sync api.json" },
+    { "id": "006-task-pipeline-stage-machine", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Stage type, canonical order, forward-transition rules (pipeline-domain-core)" }
   ]
 }
