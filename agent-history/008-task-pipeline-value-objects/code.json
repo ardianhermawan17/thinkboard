@@ -1,0 +1,26 @@
+{
+  "task_id": "008-task-pipeline-value-objects",
+  "phase": "code",
+  "started_at": "2026-09-14T02:10:00Z",
+  "completed_at": "2026-09-14T02:25:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/shared/kernel/ids.go", "action": "modified", "summary": "Added PointID (points.id), following the existing strong-ID-type convention." },
+    { "path": "thinkboard-backend/internal/pipeline/temperature.go", "action": "created", "summary": "Temperature (float64-based VO) + NewTemperature enforcing [0,1], mirroring point_conclusions.temperature's CHECK constraint in Go." },
+    { "path": "thinkboard-backend/internal/pipeline/point.go", "action": "created", "summary": "Point struct (id, run_id, parent_point_id, content, position) + NewPoint enforcing non-empty content and no self-parent; IsRoot() helper." },
+    { "path": "thinkboard-backend/internal/pipeline/temperature_test.go", "action": "created", "summary": "Table-driven: lower/upper bound, mid-range, below/above range." },
+    { "path": "thinkboard-backend/internal/pipeline/point_test.go", "action": "created", "summary": "Root point, child point, empty content rejected, self-parent rejected." }
+  ],
+  "decisions": [
+    "Skipped render-mode/rendering.go value types (confirmed with user): nothing in this task or the existing codebase consumes run_renderings yet — deferred to the future task that actually implements rendering.go.",
+    "Skipped point_conclusions/Conclusion entity (confidence_label, open_question, conclusion text) — not in this task's stated focus (Temperature, Point, score-range validation, parent/child shape).",
+    "No tree-assembly/cycle-detection helpers across multiple points — would require a loaded point set (repository/service layer), out of scope for a pure single-value-object task; Point only guards against the local self-parent case.",
+    "Temperature and Point follow the existing lightweight VO style from tasks 006/007 (plain defined types / structs + constructor validation, no opaque wrapper), for consistency."
+  ],
+  "commands_run": [
+    "gofmt -l -w internal/pipeline internal/shared/kernel",
+    "go vet ./...",
+    "go test ./...",
+    "go test ./internal/pipeline/... -v",
+    "go build ./..."
+  ]
+}

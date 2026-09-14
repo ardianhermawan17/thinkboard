@@ -1,0 +1,27 @@
+{
+  "id": "008-task-pipeline-value-objects",
+  "title": "Pipeline value objects: Temperature VO and Point parent/child shape (pipeline-domain-core)",
+  "architecture": "backend",
+  "secondary_architecture": [],
+  "created_at": "2026-09-14T02:00:00Z",
+  "status": "done",
+  "depends_on": ["007-task-pipeline-run-model"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 point.go ('Point + parent_point_id tree'), temperature.go ('Temperature VO, [0,1] invariant enforced in Go, not only by CHECK'); §10 build order step 3" },
+    { "doc": "thinkboard-schema-final.sql", "section": "points table (lines 270-278), point_conclusions.temperature check (lines 280-289)" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "§1 Temperature definition ('Lean-Canvas-style confidence/risk read')" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Define Temperature as a validated [0,1] value type, mirroring point_conclusions.temperature's numeric(3,2) check(>=0 and <=1) constraint in Go, not only relying on the DB CHECK", "plan_ref": "thinkboard-schema-final.sql point_conclusions.temperature check", "status": "done" },
+    { "id": "g2", "description": "Define Point mirroring the points table (id, run_id, parent_point_id, content, position) with a self-parent invariant guard and non-empty content guard", "plan_ref": "thinkboard-schema-final.sql points table", "status": "done" },
+    { "id": "g3", "description": "Add kernel.PointID following the existing strong-ID-type convention", "plan_ref": "thinkboard-backend/internal/shared/kernel/ids.go convention", "status": "done" },
+    { "id": "g4", "description": "Table-driven tests for Temperature range validation and Point construction invariants, pure behavior only (no DB, no LLM)", "plan_ref": "02-working.md §7.3 (extended here for consistency, not a hard requirement for this file set)", "status": "done" }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "task_id": "008-task-pipeline-value-objects",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "NewTemperature rejects <0 and >1, accepts 0, 1, and mid-range values; matches the SQL CHECK exactly." },
+    { "goal_id": "g2", "status": "pass", "notes": "Point fields map 1:1 to the points table; NewPoint rejects empty content and self-parent; IsRoot() reflects the nullable parent_point_id." },
+    { "goal_id": "g3", "status": "pass", "notes": "kernel.PointID added alongside RunID/SessionID/etc., not duplicated locally." },
+    { "goal_id": "g4", "status": "pass", "notes": "go test ./internal/pipeline/... -v: 47 passed, 0 failed, covering both files' valid and invalid cases." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "thinkboard-schema-final.sql", "section": "points table; point_conclusions.temperature CHECK", "result": "match — re-read after coding, both types are a literal transcription of the relevant columns/constraint." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 point.go / temperature.go descriptions", "result": "match — Temperature is a VO with the [0,1] invariant enforced in Go; Point carries the parent_point_id tree shape. rendering.go intentionally not built (see analyze.json/code.json decisions)." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}

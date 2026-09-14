@@ -16,3 +16,6 @@ type SessionID string
 
 // RunID is pipeline_runs.id.
 type RunID string
+
+// PointID is points.id.
+type PointID string

@@ -1,0 +1,24 @@
+{
+  "task_id": "008-task-pipeline-value-objects",
+  "phase": "analyze",
+  "started_at": "2026-09-14T02:00:00Z",
+  "completed_at": "2026-09-14T02:10:00Z",
+  "sources_read": [
+    { "doc": "thinkboard-schema-final.sql", "section": "points table (270-278); point_conclusions table + temperature check (280-289); session_mode/diagram_kind enums (17, 41); run_renderings table (298-315)" },
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 pipeline/ file tree (point.go, temperature.go, rendering.go descriptions); §10 build order step 3" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "§1 Temperature definition; §3.5 Three modes" },
+    { "doc": "thinkboard-backend/internal/shared/kernel/ids.go", "section": "full file — strong-ID-type convention, extended in task 007 with RunID" },
+    { "doc": "thinkboard-backend/internal/pipeline/run.go, stage.go, transition.go", "section": "full files (tasks 006/007 output) — existing VO style: plain defined types (Stage, RunStatus, Mode), sentinel errors, no opaque wrapper structs" }
+  ],
+  "scope": "New Go value types only, in internal/pipeline: Temperature (validated [0,1] score) and Point (id, run_id, parent_point_id, content, position with a self-parent guard), plus kernel.PointID. No rendering.go / render-mode payload type (confirmed skipped with user — nothing in this task or the existing codebase consumes run_renderings yet; deferred to the future task that implements rendering.go). No point_conclusions/Conclusion entity (confidence_label, open_question, conclusion text are not in this task's stated focus list). No DB, no LLM, no tree-assembly/traversal helpers across multiple points (would need a repository/loaded set, out of scope for a pure single-value invariant).",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "NewTemperature(v float64) rejects v < 0 or v > 1 with a sentinel error; accepts the full closed range [0,1] inclusive, matching the SQL check (temperature >= 0 and temperature <= 1)." },
+    { "goal_id": "g2", "text": "NewPoint(id, runID, parentID, content, position) rejects empty content and rejects parentID == id (self-parent); Point.IsRoot() reports whether parent_point_id is unset, mirroring the nullable self-referencing FK." },
+    { "goal_id": "g3", "text": "kernel.PointID added next to RunID/SessionID/etc., not defined locally in pipeline/." },
+    { "goal_id": "g4", "text": "temperature_test.go and point_test.go are table-driven and cover: temperature at 0, at 1, mid-range, below 0, above 1; point with valid parent, root point (no parent), self-parent rejected, empty content rejected." }
+  ],
+  "open_questions": [],
+  "risks": [
+    "Point does not validate against the DB's parent_point_id foreign key existing or against cross-run cycles (e.g. a 3-node cycle across separate NewPoint calls) — that requires a loaded run's full point set and belongs to a future repository/service-layer task, not this pure single-value-object task."
+  ]
+}
