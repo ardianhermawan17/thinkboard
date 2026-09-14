@@ -1,0 +1,31 @@
+{
+  "task_id": "003-task-backend-auth-authorization",
+  "phase": "analyze",
+  "started_at": "2026-09-13T02:00:00Z",
+  "completed_at": "2026-09-13T02:15:00Z",
+  "sources_read": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 ownership table; §4 import rules; §5.6 internal/auth; §6 Transport/middleware; §7.9 DB pool sizing" },
+    { "doc": "thinkboard-schema-final.sql", "section": "current_profile_id(), teams/team_members/team_role, is_team_member(), is_team_leader(), sessions/board_columns/boards chain, can_access_session()" },
+    { "doc": "thinkboard-supabase/supabase/config.toml", "section": "[db] local port 54322" },
+    { "doc": "02-working.md", "section": "re-confirmed phase contract" }
+  ],
+  "scope": "Implement the real internal/auth package per §5.6: JWKS-based Supabase JWT verification, and an authorizer that is an exact Go mirror of the schema's SQL security-definer helpers (current_profile_id, is_team_member, is_team_leader, can_access_session), plus a TTL cache and the two Gin middleware files from §6 that use them. Wire one protected example route (GET /v1/me) to prove the chain works end to end. Does NOT include: RLS policy changes, new business endpoints beyond /v1/me, membership-cache invalidation on role change (§5.6 mentions 'invalidated on role change' — implemented as TTL expiry only, no realtime/pubsub invalidation hook, since no such wiring exists anywhere yet), or a docker-based integration test against real Postgres (no testcontainers/Docker available in this session — unit tests use fakes instead, flagged in test.json).",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "kernel.AuthUserID/ProfileID/TeamID/SessionID are distinct string(uuid) types, not raw strings, so a caller can't pass the wrong id type where the compiler could catch it." },
+    { "goal_id": "g2", "text": "postgres.NewPool(ctx, cfg) applies §7.9's required pgx settings (DefaultQueryExecMode=Exec, StatementCacheCapacity=0) unconditionally, since the transaction pooler breaks server-side prepared statements even in local dev against port 54322 direct connect — same code path either way, no special-case for direct vs. pooled." },
+    { "goal_id": "g3", "text": "jwt.Verifier fetches {SupabaseURL}/auth/v1/.well-known/jwks.json, caches keys by kid, refetches once on an unknown kid (key rotation), and rejects expired/malformed/wrong-issuer tokens." },
+    { "goal_id": "g4", "text": "Authorizer methods take a DB interface (satisfied by *pgxpool.Pool) so they're unit-testable with a fake, and their SQL matches the schema function bodies field-for-field (team_members.team_id/profile_id/role; sessions->board_columns->boards join for can_access_session)." },
+    { "goal_id": "g5", "text": "CachedAuthorizer wraps Authorizer, TTL default 60s (matches §5.6's '<=60s'), keyed per (profile,team) and per (profile,session)." },
+    { "goal_id": "g6", "text": "middleware.Auth() populates gin context with kernel.ProfileID from a verified Bearer token (401 on missing/invalid); middleware.RequireTeamMember()/RequireSessionAccess() read a URL param and 403 on failure, 500 mapped via shared/errs on unexpected DB error." },
+    { "goal_id": "g7", "text": "GET /v1/me (behind Auth()) returns the resolved profile id; go test ./... covers jwt verify (real RSA keypair + httptest JWKS server), authorizer logic (fake DB), and cache TTL expiry." }
+  ],
+  "open_questions": [
+    "current_profile_id() resolves via profile_identities keyed on auth_user_id = auth.uid() — this task's ResolveProfileID does the same lookup in Go (profile_identities WHERE auth_user_id = $1). If a signed-in auth user has no profile_identities row yet (e.g. the 0002_auth_trigger.sql bridge hasn't fired), ResolveProfileID returns 'not found' as a 403, not a 500 — flagging this as a judgment call, not silently assumed correct.",
+    "Supabase local/default projects issue HS256 JWTs signed with a shared secret unless 'asymmetric JWT' / JWKS is explicitly enabled on the project. 03-backend-folder-architecture.md §5.6 says 'verify via JWKS' without qualification, so this task implements JWKS (RS256/ES256) verification only, matching the doc literally. If the actual Supabase project this connects to uses the legacy HS256 shared-secret model instead, jwt.go will need an HS256 fallback path — that's a real risk worth confirming against the live project before this ships past local testing.",
+    "No Docker/testcontainers available in this session, so §8's 'Integration | test/integration/ | testcontainers Postgres + real migrations' row is not exercised for this task — authorizer SQL is verified by inspection against thinkboard-schema-final.sql plus unit tests against a fake DB, not a real one."
+  ],
+  "risks": [
+    "If the target Supabase project uses HS256 (legacy JWT secret) instead of JWKS, every request will 401 until jwt.go gets an HS256 path — this is the single biggest correctness risk of this task and should be checked against the real project's Auth settings before relying on this in an environment beyond local dev.",
+    "membership cache has no invalidation hook (TTL-only) — a role change (e.g. demoting a leader) can be honored up to 60s late. Acceptable per the doc's own '<=60s' framing but worth restating."
+  ]
+}

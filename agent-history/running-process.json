@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-13T04:15:00Z",
+  "current_task_id": null,
+  "current_phase": "idle",
+  "history_path": "agent-history/004-task-postman-api-collection",
+  "status": "idle",
+  "task_sequence": [
+    { "id": "001-task-backend-gateway-scaffolding", "architecture": "backend", "status": "done", "title": "Backend folder structure + Gin scaffolding in thinkboard-backend/" },
+    { "id": "002-task-backend-supabase-login", "architecture": "backend", "status": "cancelled", "title": "Simple email/password login endpoint proxying to Supabase Auth (rolled back — contradicted §1 ownership rules)" },
+    { "id": "003-task-backend-auth-authorization", "architecture": "backend", "status": "done", "title": "Full internal/auth: Supabase JWT verification + team-membership authorization (RLS mirror)" },
+    { "id": "004-task-postman-api-collection", "architecture": "backend", "status": "done", "title": "Create Postman API collection for current backend auth surface" }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "task_id": "002-task-backend-supabase-login",
+  "phase": "code",
+  "started_at": "2026-09-13T01:05:00Z",
+  "completed_at": "2026-09-13T01:25:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/platform/config/config.go", "action": "modified", "summary": "added SupabaseURL (default http://127.0.0.1:54321) and SupabaseAnonKey env fields" },
+    { "path": "thinkboard-backend/internal/shared/errs/errs.go", "action": "modified", "summary": "added errs.New(status, message) for domain code constructing an explicit status" },
+    { "path": "thinkboard-backend/internal/auth/doc.go", "action": "modified", "summary": "documented supabase.go as a dev-only addition outside §5.6's real scope, cross-referenced to this task folder" },
+    { "path": "thinkboard-backend/internal/auth/supabase.go", "action": "created", "summary": "SupabaseClient.Login: stdlib net/http POST to GoTrue password grant; 5xx -> plain error (500), other non-200 -> errs.New(401)" },
+    { "path": "thinkboard-backend/internal/httpapi/dto/auth.go", "action": "created", "summary": "LoginRequest (email/min-length binding tags), LoginResponse" },
+    { "path": "thinkboard-backend/internal/httpapi/handler/auth.go", "action": "created", "summary": "AuthHandler.Login: bind, call SupabaseClient, map" },
+    { "path": "thinkboard-backend/internal/httpapi/handler/auth_test.go", "action": "created", "summary": "httptest fake GoTrue server; success, invalid-credentials, bad-request cases" },
+    { "path": "thinkboard-backend/internal/httpapi/router.go", "action": "modified", "summary": "NewRouter now takes config.Config; wires POST /v1/auth/login" },
+    { "path": "thinkboard-backend/cmd/gateway/main.go", "action": "modified", "summary": "passes cfg to NewRouter; logs a warning if SUPABASE_ANON_KEY is unset" }
+  ],
+  "decisions": [
+    "No interface introduced between handler and auth.SupabaseClient — one implementation, so the concrete type is used directly and tested by pointing BaseURL at an httptest.Server (ponytail: no interface for one implementation).",
+    "Collapsed all non-200 GoTrue responses to a generic 401 'invalid credentials' (except 5xx -> 500) rather than passing through Supabase's error body, to avoid leaking GoTrue's internal error shape/enumeration through this proxy."
+  ],
+  "commands_run": [
+    "go build ./...",
+    "go vet ./...",
+    "go test ./...",
+    "go run ./cmd/gateway + curl /healthz, curl /v1/auth/login with a malformed body (400) and a well-formed one (401, since SUPABASE_ANON_KEY is unset and the local Supabase instance on :54321 rejected it) — process terminated cleanly after"
+  ]
+}

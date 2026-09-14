@@ -1,0 +1,18 @@
+{
+  "task_id": "001-task-backend-gateway-scaffolding",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "Every package path in §2/§5's internal/ tree exists with a placeholder doc.go; `find . -type d` matches the doc's list minus llm/provider's siblings which are per-provider files deferred with the package itself." },
+    { "goal_id": "g2", "status": "pass", "notes": "router.go uses gin.New() + explicit middleware (not gin.Default()); main.go sets gin.ReleaseMode via config, listens, and drains on SIGINT/SIGTERM with config.ShutdownTimeout, matching §7.10's shape at scaffold scope (no SSE 'shutdown' event since no SSE routes exist yet)." },
+    { "goal_id": "g3", "status": "pass", "notes": "go build ./..., go vet ./... both clean from thinkboard-backend/." },
+    { "goal_id": "g4", "status": "pass", "notes": "go test ./... passes; health_test.go exercises the only real handler added." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§2 Top-level layout", "result": "Matches except the root directory name: user explicitly requested thinkboard-backend/ (repo-root sibling) instead of services/gateway/ (nested). Recorded as an open question in analyze.json, not silently resolved." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§6 Transport (Gin) 'Gin specifics that bite'", "result": "gin.New() + explicit middleware and gin.SetMode(gin.ReleaseMode) both followed. c.Request.Context() / c.Copy() / SSE-writer rules not yet applicable — no handler beyond health exists." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§9 Build order step 1", "result": "Matches scope: shared/ + platform/config + health route + shutdown wiring exist. platform/postgres intentionally left a placeholder (no pool construction yet) since step 1's 'pool' proof needs a real DB target, which is a separate task." },
+    { "doc": "02-working.md", "section": "§7.3 test evidence rule", "result": "Not triggered — this task touches neither pipeline-stage transitions nor the context-warning heuristic, so the zero-tests gate doesn't apply; one test was added anyway for the handler that does exist." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}

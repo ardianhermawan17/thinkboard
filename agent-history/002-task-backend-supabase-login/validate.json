@@ -1,0 +1,19 @@
+{
+  "task_id": "002-task-backend-supabase-login",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "config.Config.SupabaseURL/SupabaseAnonKey present, env-overridable, default matches thinkboard-supabase local API port (54321)." },
+    { "goal_id": "g2", "status": "pass", "notes": "auth.SupabaseClient.Login uses only net/http + encoding/json; POST {BaseURL}/auth/v1/token?grant_type=password with apikey header, confirmed against a live local GoTrue during manual smoke test (got a real 401)." },
+    { "goal_id": "g3", "status": "pass", "notes": "Handler follows bind/call/map with no domain-state branching; 400 for binding failure, 401 for rejected credentials, 500 default path for network/5xx — verified by both unit tests and manual curl." },
+    { "goal_id": "g4", "status": "pass", "notes": "auth_test.go covers success, invalid-credentials, and bad-request without touching a live Supabase project." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 what the gateway does not own", "result": "Confirmed conflict: this endpoint is a password-flow proxy, which §1 assigns to client->Supabase directly. Not fixed silently — recorded in analyze.json.open_questions and in the response to the user as a follow-up decision (keep as dev-only vs. remove once apps/web exists)." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§6 handler contract (bind, call, map)", "result": "Matches: AuthHandler.Login is exactly bind/call/map, three branches, no store access." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§4 import rules", "result": "httpapi -> auth -> shared/errs only; no violation of the shared <- platform <- feature <- httpapi <- cmd direction." }
+  ],
+  "signed_off": true,
+  "issues_found": [
+    "This login proxy duplicates a capability Supabase Auth already exposes directly to any client with the anon key — per §5.2's reuse rule ('if a new query duplicates something the client can already read through RLS/Supabase, it doesn't belong here'), this should likely be removed once apps/web talks to Supabase Auth directly instead of through the gateway."
+  ]
+}

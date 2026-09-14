@@ -1,0 +1,24 @@
+{
+  "task_id": "003-task-backend-auth-authorization",
+  "phase": "result",
+  "closed_at": "2026-09-13T03:15:00Z",
+  "final_status": "done",
+  "goals_summary": { "total": 7, "done": 7, "blocked": 0 },
+  "artifacts": [
+    "thinkboard-backend/internal/shared/kernel/ids.go",
+    "thinkboard-backend/internal/platform/postgres/pool.go",
+    "thinkboard-backend/internal/auth/{jwks.go,jwt.go,authorizer.go,cache.go,doc.go}",
+    "thinkboard-backend/internal/auth/{jwt_test.go,authorizer_test.go,cache_test.go}",
+    "thinkboard-backend/internal/httpapi/middleware/{auth.go,authz.go}",
+    "thinkboard-backend/internal/httpapi/handler/me.go",
+    "thinkboard-backend/internal/httpapi/router.go (modified)",
+    "thinkboard-backend/cmd/gateway/main.go (modified)",
+    "thinkboard-backend/internal/platform/config/config.go (modified)",
+    "thinkboard-backend/internal/shared/errs/errs.go (modified)"
+  ],
+  "follow_up_tasks": [
+    "Verify against a real `supabase start` project + a real signed-in user whether the project issues JWKS-verifiable (RS256/ES256) or legacy HS256 JWTs, and add an HS256 path to jwt.go if needed.",
+    "Wire RequireTeamMember/RequireSessionAccess onto real routes once pipeline/session endpoints exist — they're built but currently unused outside /v1/me.",
+    "Consider a testcontainers-based integration test (§8) against the real thinkboard-schema-final.sql migrations once Docker is available, to validate authorizer.go's SQL against live RLS-equivalent data instead of by inspection."
+  ]
+}

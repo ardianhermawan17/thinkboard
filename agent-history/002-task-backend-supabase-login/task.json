@@ -1,0 +1,27 @@
+{
+  "id": "002-task-backend-supabase-login",
+  "title": "Simple email/password login endpoint proxying to Supabase Auth",
+  "architecture": "backend",
+  "secondary_architecture": ["supabase"],
+  "created_at": "2026-09-13T01:00:00Z",
+  "status": "cancelled",
+  "cancellation_note": "Implemented, then rolled back at the user's request on 2026-09-13: it contradicted 03-backend-folder-architecture.md §1 ('auth issuance, JWT minting, password flows' are explicitly NOT owned by the gateway). Deviation was flagged in analyze.json.open_questions rather than asked about up front, which the user identified as the wrong call for a contract contradiction (vs. an open question). See agent-history/003-task-backend-auth-authorization for the correct §5.6-scoped replacement. Folder kept per 02-working.md §1 (nothing is ever deleted).",
+  "depends_on": ["001-task-backend-gateway-scaffolding"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 What this service owns/does not own; §5.6 internal/auth" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "§3.1 dual login paths (internal/individual)" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Add SUPABASE_URL / SUPABASE_ANON_KEY to platform/config with local-dev defaults", "plan_ref": "§5.7 platform/config", "status": "done" },
+    { "id": "g2", "description": "Add a Supabase Auth client in internal/auth that performs the GoTrue password grant (stdlib net/http, no new dependency)", "plan_ref": "§5.6", "status": "done" },
+    { "id": "g3", "description": "Add POST /v1/auth/login handler: bind email/password, call the client, map Supabase errors to HTTP status via shared/errs", "plan_ref": "§6 Transport (Gin)", "status": "done" },
+    { "id": "g4", "description": "One runnable test that does not hit live Supabase (httptest stand-in for GoTrue)", "plan_ref": "02-working.md §7.3 test evidence" ,"status": "done" }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

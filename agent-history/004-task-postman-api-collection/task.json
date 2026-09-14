@@ -1,0 +1,42 @@
+{
+  "id": "004-task-postman-api-collection",
+  "title": "Create Postman API collection for current backend auth surface",
+  "architecture": "backend",
+  "secondary_architecture": ["supabase"],
+  "created_at": "2026-09-13T04:00:00Z",
+  "status": "done",
+  "depends_on": ["001-task-backend-gateway-scaffolding", "003-task-backend-auth-authorization"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 service ownership; §5.6 internal/auth; §6 Transport" },
+    { "doc": "agent-history/running-process.json", "section": "current task sequence" },
+    { "doc": "agent-history/002-task-backend-supabase-login/result.json", "section": "cancelled login proxy" },
+    { "doc": "agent-history/003-task-backend-auth-authorization/result.json", "section": "implemented JWT verification and /v1/me" }
+  ],
+  "goals": [
+    {
+      "id": "g1",
+      "description": "Read backend route/auth implementation and agent-history to identify the actual current API surface.",
+      "plan_ref": "03-backend-folder-architecture.md §1, §5.6, §6; agent-history tasks 001-003",
+      "status": "done"
+    },
+    {
+      "id": "g2",
+      "description": "Create a Postman-importable api.json for direct Supabase Auth plus gateway health and authenticated /v1/me.",
+      "plan_ref": "Current backend implementation: router.go, handler/me.go, middleware/auth.go",
+      "status": "done"
+    },
+    {
+      "id": "g3",
+      "description": "Document that the backend login proxy was cancelled and that gateway auth currently verifies bearer tokens only.",
+      "plan_ref": "agent-history/002-task-backend-supabase-login/result.json",
+      "status": "done"
+    }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

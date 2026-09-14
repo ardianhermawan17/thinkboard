@@ -1,0 +1,42 @@
+{
+  "task_id": "004-task-postman-api-collection",
+  "phase": "validate",
+  "goal_checks": [
+    {
+      "goal_id": "g1",
+      "status": "pass",
+      "notes": "Read agent-history/running-process.json, tasks 001-003 results, task 003 analysis/code records, and the current backend router, handlers, middleware, auth verifier, authorizer, config, and auth trigger migration."
+    },
+    {
+      "goal_id": "g2",
+      "status": "pass",
+      "notes": "Created thinkboard-backend/api/api.json in Postman Collection v2.1 format with variables and token-capturing scripts."
+    },
+    {
+      "goal_id": "g3",
+      "status": "pass",
+      "notes": "Collection description states that Supabase Auth owns signup/signin and that the gateway only verifies Authorization: Bearer access tokens. The cancelled login proxy is not included."
+    }
+  ],
+  "cross_check_against_plan": [
+    {
+      "doc": "03-backend-folder-architecture.md",
+      "section": "§1 What this service owns",
+      "result": "pass: collection keeps auth issuance/password flows under Supabase and does not add a gateway login endpoint."
+    },
+    {
+      "doc": "thinkboard-backend/internal/httpapi/router.go",
+      "section": "full file",
+      "result": "pass: collection includes only /healthz and /v1/me for the gateway."
+    },
+    {
+      "doc": "agent-history/002-task-backend-supabase-login/result.json",
+      "section": "rollback_note",
+      "result": "pass: the cancelled POST /v1/auth/login proxy is intentionally excluded."
+    }
+  ],
+  "signed_off": true,
+  "issues_found": [
+    "The gateway's JWT verifier currently accepts JWKS-backed RS256/ES256 tokens only. If the Supabase project issues legacy HS256 tokens, Postman sign-in will work but gateway /v1/me may return 401 until jwt.go supports HS256."
+  ]
+}

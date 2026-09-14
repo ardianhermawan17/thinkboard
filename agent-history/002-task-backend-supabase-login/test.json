@@ -1,0 +1,15 @@
+{
+  "task_id": "002-task-backend-supabase-login",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/httpapi/handler/auth_test.go"
+  ],
+  "commands_run": [
+    { "command": "go build ./...", "result": "success" },
+    { "command": "go vet ./...", "result": "no issues found" },
+    { "command": "go test ./...", "result": "4 passed in 23 packages (TestHealth + TestLogin_Success + TestLogin_InvalidCredentials + TestLogin_BadRequest)" },
+    { "command": "manual: go run ./cmd/gateway, curl /healthz, curl /v1/auth/login (malformed body and well-formed body)", "result": "200 healthz; 400 for malformed body; 401 for well-formed body against the local Supabase instance with no anon key configured — confirms the proxy actually reaches a live GoTrue, not just the httptest double" }
+  ],
+  "summary": { "total": 4, "passed": 4, "failed": 0, "skipped": 0 },
+  "coverage_notes": "Not a pipeline-stage or context-warning task, so 02-working.md's zero-tests gate doesn't apply. All three login response branches (success, invalid credentials, bad request) are covered against a fake GoTrue; the 5xx->500 branch is not covered by an automated test (would need a fake server returning 5xx) — left uncovered as low-value for a 3-branch proxy, noted here rather than silently skipped."
+}

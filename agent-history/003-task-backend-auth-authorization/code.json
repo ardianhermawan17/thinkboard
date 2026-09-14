@@ -1,0 +1,38 @@
+{
+  "task_id": "003-task-backend-auth-authorization",
+  "phase": "code",
+  "started_at": "2026-09-13T02:15:00Z",
+  "completed_at": "2026-09-13T03:10:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/shared/kernel/ids.go", "action": "created", "summary": "AuthUserID/ProfileID/TeamID/SessionID string types; removed kernel/doc.go" },
+    { "path": "thinkboard-backend/internal/platform/config/config.go", "action": "modified", "summary": "added SupabaseURL, DatabaseURL, MembershipCacheTTL, DB pool bound fields" },
+    { "path": "thinkboard-backend/internal/platform/postgres/pool.go", "action": "created", "summary": "pgxpool.NewWithConfig per §7.9 (Exec mode, StatementCacheCapacity=0, sizing from config); removed postgres/doc.go" },
+    { "path": "thinkboard-backend/internal/auth/jwks.go", "action": "created", "summary": "JWK -> *rsa.PublicKey / *ecdsa.PublicKey decoding" },
+    { "path": "thinkboard-backend/internal/auth/jwt.go", "action": "created", "summary": "Verifier: fetch/cache Supabase JWKS, verify RS256/ES256, issuer + expiry checks, returns AuthUserID" },
+    { "path": "thinkboard-backend/internal/auth/authorizer.go", "action": "created", "summary": "Authorizer: ResolveProfileID, IsTeamMember, IsTeamLeader, CanAccessSession, exact SQL mirror" },
+    { "path": "thinkboard-backend/internal/auth/cache.go", "action": "created", "summary": "generic ttlCache[K] + CachedAuthorizer wrapping the three membership checks, 60s default" },
+    { "path": "thinkboard-backend/internal/auth/doc.go", "action": "modified", "summary": "documents the now-real package contents" },
+    { "path": "thinkboard-backend/internal/httpapi/middleware/auth.go", "action": "created", "summary": "Auth(): Bearer token -> Verify -> ResolveProfileID -> gin context" },
+    { "path": "thinkboard-backend/internal/httpapi/middleware/authz.go", "action": "created", "summary": "RequireTeamMember(), RequireSessionAccess() — 403 on failed check" },
+    { "path": "thinkboard-backend/internal/httpapi/handler/me.go", "action": "created", "summary": "GET /v1/me — proves the chain end to end" },
+    { "path": "thinkboard-backend/internal/httpapi/router.go", "action": "modified", "summary": "NewRouter(cfg, db) wires Auth() over a /v1 group with /v1/me" },
+    { "path": "thinkboard-backend/cmd/gateway/main.go", "action": "modified", "summary": "constructs the pgx pool via postgres.NewPool, passes to NewRouter, closes on shutdown" },
+    { "path": "thinkboard-backend/internal/shared/errs/errs.go", "action": "modified", "summary": "re-added errs.New(status, message), needed by jwt.go/authorizer.go (this is new for this task, not a leftover from the rolled-back task 002)" },
+    { "path": "thinkboard-backend/go.mod / go.sum", "action": "modified", "summary": "added github.com/jackc/pgx/v5, github.com/golang-jwt/jwt/v5 via go get + go mod tidy" },
+    { "path": "thinkboard-backend/internal/auth/{jwt_test.go,authorizer_test.go,cache_test.go}", "action": "created", "summary": "unit tests, see test.json" }
+  ],
+  "decisions": [
+    "Chose JWKS/RS256+ES256 verification per §5.6's literal wording ('verify via JWKS'), not Supabase's legacy HS256 shared-secret mode — flagged as a real risk in analyze.json if the live project actually uses the legacy mode.",
+    "DB interface in authorizer.go is the narrow QueryRow-only shape (satisfied structurally by *pgxpool.Pool) rather than a full repository interface, so tests use a 20-line fake instead of a mock framework or testcontainers.",
+    "Generics (ttlCache[K]) used for the three membership caches instead of three near-duplicate hand-written maps — same amount of code as one, avoids copy-paste drift between member/leader/session cache logic.",
+    "No cache invalidation-on-role-change hook implemented (§5.6 mentions it) — TTL-only, since no pub/sub or DB trigger wiring exists anywhere in this codebase yet; noted in analyze.json as an accepted 60s-late-worst-case gap."
+  ],
+  "commands_run": [
+    "go get github.com/jackc/pgx/v5@latest github.com/golang-jwt/jwt/v5@latest",
+    "go mod tidy",
+    "go build ./...",
+    "go vet ./...",
+    "go test ./...",
+    "go run ./cmd/gateway + curl /healthz (200), /v1/me no token (401 missing bearer token), /v1/me garbage token (401 invalid token) — pool construction succeeded without a live Postgres connection (pgxpool connects lazily)"
+  ]
+}

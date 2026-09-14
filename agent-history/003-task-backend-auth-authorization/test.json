@@ -1,0 +1,18 @@
+{
+  "task_id": "003-task-backend-auth-authorization",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/auth/jwt_test.go",
+    "thinkboard-backend/internal/auth/authorizer_test.go",
+    "thinkboard-backend/internal/auth/cache_test.go",
+    "thinkboard-backend/internal/httpapi/handler/health_test.go"
+  ],
+  "commands_run": [
+    { "command": "go build ./...", "result": "success" },
+    { "command": "go vet ./...", "result": "no issues found" },
+    { "command": "go test ./...", "result": "13 passed in 23 packages (health; verifier: valid/expired/wrong-issuer/unknown-kid; authorizer: resolve/not-found/is-member/is-leader-role-filter/can-access-session; cache: hits-within-ttl-misses-after-expiry/different-keys-dont-share-cache)" },
+    { "command": "manual: go run ./cmd/gateway, curl /healthz, curl /v1/me (no token), curl /v1/me (garbage token)", "result": "200, 401 'missing bearer token', 401 'invalid token' respectively; pool construction against an unreachable local Postgres did not block startup (pgx connects lazily)" }
+  ],
+  "summary": { "total": 13, "passed": 13, "failed": 0, "skipped": 0 },
+  "coverage_notes": "Not a pipeline-stage/context-warning task so 02-working.md's zero-tests gate doesn't formally apply, but this task IS the RLS-replacement security boundary, so it was tested as if that gate applied: every branch of jwt.go (signature/expiry/issuer/unknown-kid) and every authorizer method (including the role-filter difference between IsTeamMember and IsTeamLeader) has a table-driven-style test against fakes. No integration test against a real Postgres/Supabase project — no Docker/testcontainers available in this session (§8's Integration row); authorizer SQL was verified by inspection against thinkboard-schema-final.sql's function bodies instead. Recommend a manual end-to-end check against a real `supabase start` + a real signed-in user before this is relied on beyond local dev."
+}

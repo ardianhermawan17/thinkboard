@@ -1,0 +1,27 @@
+{
+  "task_id": "002-task-backend-supabase-login",
+  "phase": "analyze",
+  "started_at": "2026-09-13T01:00:00Z",
+  "completed_at": "2026-09-13T01:05:00Z",
+  "sources_read": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 What this service owns; §5.6 internal/auth; §6 Transport" },
+    { "doc": "02-working.md", "section": "full file (re-confirming phase contract before starting a second task)" },
+    { "doc": "thinkboard-supabase/supabase/config.toml", "section": "[api]/[auth] local ports and site_url" },
+    { "doc": "CLAUDE.md", "section": "Supabase project section — auth trigger, profiles/profile_identities split" }
+  ],
+  "scope": "Add one POST /v1/auth/login handler that proxies email+password to Supabase's GoTrue password-grant endpoint and returns the resulting access/refresh token. No JWT verification middleware, no authorizer, no session cookie handling, no signup/refresh/logout endpoints, no dual-login (internal/individual) branching — this is the smallest slice that lets the backend authenticate a user against Supabase for testing, ahead of a frontend existing.",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "config.Config carries SupabaseURL and SupabaseAnonKey, env-overridable, defaulting to the local `supabase start` API (http://127.0.0.1:54321) and empty key (Login fails loudly at request time if unset, not at startup, to keep other routes usable without Supabase running)." },
+    { "goal_id": "g2", "text": "auth.SupabaseClient.Login(ctx, email, password) POSTs to {BaseURL}/auth/v1/token?grant_type=password with the apikey header, using only net/http/encoding-json (stdlib)." },
+    { "goal_id": "g3", "text": "Handler binds dto.LoginRequest (email format + min password length validated by binding tags), calls the client, and on a Supabase 4xx returns 401 with a generic message; on network/5xx returns 500 via errs.Fail's default path." },
+    { "goal_id": "g4", "text": "A handler test stands up an httptest.Server playing GoTrue (valid creds -> 200 + token, invalid -> 400 body) and asserts the handler maps both cases correctly." }
+  ],
+  "open_questions": [
+    "03-backend-folder-architecture.md §1 explicitly lists 'Auth issuance, JWT minting, password flows' under what the gateway does NOT own — the target architecture is client (Next.js) -> Supabase directly for login, gateway only verifies the resulting JWT. This task adds a login proxy anyway because no frontend exists yet and the user asked for 'simple login that connects Supabase' to test against. Flagging per contract rather than silently deciding: this endpoint may be temporary/dev-only and worth removing (or gating behind a build tag/env flag) once apps/web exists and talks to Supabase Auth directly.",
+    "00-thinkboard-abstract-plan.md §3.1 describes two login paths (internal/individual) bridged via profiles/profile_identities (CLAUDE.md). This task does not implement that split — it's a single generic email/password proxy against whichever auth.users row Supabase resolves. Dual-login branching is out of scope here and would be its own task.",
+    "No real Supabase anon key is available in this environment/session, so g2/g3 are validated against build+vet+an httptest double, not a live local `supabase start` instance. Live verification against the actual project is a manual follow-up for whoever has the anon key."
+  ],
+  "risks": [
+    "If SUPABASE_ANON_KEY is left empty in a real deployment, /v1/auth/login will silently 401 everything rather than failing at startup — acceptable for a dev-only proxy endpoint but should be revisited if this becomes a real path."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "task_id": "003-task-backend-auth-authorization",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "kernel.AuthUserID/ProfileID/TeamID/SessionID are distinct named string types." },
+    { "goal_id": "g2", "status": "pass", "notes": "postgres.NewPool sets DefaultQueryExecMode=Exec and StatementCacheCapacity=0 unconditionally, plus sizing from config; matches §7.9's required snippet field-for-field." },
+    { "goal_id": "g3", "status": "pass", "notes": "jwt.go fetches JWKS, caches by kid, refetches once on unknown kid, validates RS256/ES256 + issuer + required expiry; verified by 4 unit test cases including a real generated RSA keypair." },
+    { "goal_id": "g4", "status": "pass", "notes": "authorizer.go SQL checked line-by-line against thinkboard-schema-final.sql's current_profile_id()/is_team_member()/is_team_leader()/can_access_session() bodies — same table/column names, same join chain, same role filter." },
+    { "goal_id": "g5", "status": "pass", "notes": "CachedAuthorizer default TTL wired to config.MembershipCacheTTL (60s); TTL hit/miss and per-key isolation both covered by tests." },
+    { "goal_id": "g6", "status": "pass", "notes": "middleware.Auth() and RequireTeamMember/RequireSessionAccess implemented as real Gin middleware taking narrow interfaces (testable, no concrete auth.* import needed by the middleware package itself beyond kernel types)." },
+    { "goal_id": "g7", "status": "pass", "notes": "GET /v1/me wired behind Auth(); manual curl confirms 401 paths, and unit tests cover the pieces that would produce a 200 (JWT verify + profile resolution) independently since no live Supabase project/signed JWT was available in this session." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 'nothing else may query team_members for authorization'", "result": "Only internal/auth/authorizer.go references team_members; grep confirms no other package does." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§4 import rules", "result": "httpapi -> auth -> {shared/errs, shared/kernel}; auth -> platform not needed (pool passed in from cmd, not imported by auth). No feature package imports platform. Direction preserved." },
+    { "doc": "03-backend-folder-architecture.md", "section": "§7.9 required pgx settings under transaction pooling", "result": "Applied unconditionally in postgres.NewPool, matching the doc's snippet exactly (QueryExecModeExec, StatementCacheCapacity=0)." },
+    { "doc": "thinkboard-schema-final.sql", "section": "current_profile_id(), is_team_member(), is_team_leader(), can_access_session()", "result": "Authorizer SQL is a structural match — same tables, same join path, same role='leader' condition." }
+  ],
+  "signed_off": true,
+  "issues_found": [
+    "Real end-to-end verification against a live Supabase project (real signed JWT, real team_members rows) was not possible in this session — recommend running this against `supabase start` with a real user before treating /v1/me or any future route behind Auth()/RequireTeamMember as production-ready.",
+    "If the target Supabase project issues HS256 (legacy shared-secret) JWTs rather than using JWKS/asymmetric signing, jwt.go will reject every token as-is — needs an HS256 fallback path if that's the case (see analyze.json open_questions)."
+  ]
+}

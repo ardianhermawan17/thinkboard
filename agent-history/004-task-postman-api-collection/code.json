@@ -1,0 +1,35 @@
+{
+  "task_id": "004-task-postman-api-collection",
+  "phase": "code",
+  "started_at": "2026-09-13T04:05:00Z",
+  "completed_at": "2026-09-13T04:10:00Z",
+  "files_changed": [
+    {
+      "path": "thinkboard-backend/api/api.json",
+      "action": "created",
+      "summary": "Postman Collection v2.1 JSON for direct Supabase Auth requests plus current gateway /healthz and authenticated /v1/me routes."
+    },
+    {
+      "path": "agent-history/004-task-postman-api-collection/task.json",
+      "action": "created",
+      "summary": "Task record for the Postman API collection artifact."
+    },
+    {
+      "path": "agent-history/004-task-postman-api-collection/analyze.json",
+      "action": "created",
+      "summary": "Analysis record listing backend and agent-history sources read before generating the collection."
+    },
+    {
+      "path": "agent-history/running-process.json",
+      "action": "modified",
+      "summary": "Added task 004 to the task sequence and moved the process pointer into the task while active."
+    }
+  ],
+  "decisions": [
+    "Used Postman Collection v2.1 format because it is directly importable in Postman.",
+    "Included Supabase Auth signup/signin/refresh/get-user/logout requests because the backend login proxy task was cancelled and auth issuance is owned by Supabase.",
+    "Included only the gateway routes currently wired in router.go: GET /healthz and GET /v1/me.",
+    "Used collection variables for Supabase URL, anon key, email, password, access token, and refresh token; no real secret values were stored."
+  ],
+  "commands_run": []
+}

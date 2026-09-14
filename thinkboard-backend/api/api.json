@@ -1,0 +1,421 @@
+{
+  "info": {
+    "name": "ThinkBoard Gateway + Supabase Auth",
+    "description": "Postman collection for the currently implemented ThinkBoard backend surface. Authentication is performed directly against Supabase Auth; the Go gateway currently verifies Bearer tokens and exposes GET /healthz and authenticated GET /v1/me. The cancelled backend login proxy is intentionally not included.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "gateway_base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "supabase_url",
+      "value": "http://127.0.0.1:54321",
+      "type": "string"
+    },
+    {
+      "key": "supabase_anon_key",
+      "value": "paste-your-supabase-anon-key-here",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "user@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "change-me-123456",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Supabase Auth",
+      "description": "These requests call Supabase Auth directly. This matches the current architecture: auth issuance/password flows are owned by Supabase, not the Go gateway. After Sign Up, Sign In, or Refresh Token succeeds, the collection stores access_token and refresh_token collection variables for later gateway requests.",
+      "item": [
+        {
+          "name": "Sign Up with Email and Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text",
+                "description": "Supabase anon key. Paste it into the collection variable, do not commit a real key."
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"data\": {\n    \"full_name\": \"Postman Test User\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/signup"
+            },
+            "description": "Creates a Supabase Auth user. The migration 0002_auth_trigger.sql should create a public.profiles row and a public.profile_identities row with kind = individual. If email confirmation is enabled, this may not return a session immediately; run Sign In after confirming the email."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('response is successful or confirmation-required', function () {",
+                  "  pm.expect([200, 201, 202]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('access_token', json.access_token);",
+                  "}",
+                  "if (json.refresh_token) {",
+                  "  pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "}",
+                  "if (json.session && json.session.access_token) {",
+                  "  pm.collectionVariables.set('access_token', json.session.access_token);",
+                  "}",
+                  "if (json.session && json.session.refresh_token) {",
+                  "  pm.collectionVariables.set('refresh_token', json.session.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign In with Email and Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                }
+              ]
+            },
+            "description": "Signs in through Supabase Auth and stores access_token and refresh_token as collection variables. Use the access_token as Authorization: Bearer {{access_token}} for gateway requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('sign in succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.test('access token returned', function () {",
+                  "  pm.expect(json.access_token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('access_token', json.access_token || '');",
+                  "pm.collectionVariables.set('refresh_token', json.refresh_token || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/token?grant_type=refresh_token",
+              "query": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token"
+                }
+              ]
+            },
+            "description": "Uses the current refresh_token to get a fresh Supabase access token and stores the returned tokens."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('refresh succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('access_token', json.access_token);",
+                  "}",
+                  "if (json.refresh_token) {",
+                  "  pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Auth User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/user"
+            },
+            "description": "Verifies that the stored Supabase access_token is valid from Supabase Auth's perspective."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('user request succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('user id returned', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{supabase_anon_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/logout"
+            },
+            "description": "Signs out the current Supabase session. After this, clear access_token and refresh_token variables manually if needed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('sign out accepted', function () {",
+                  "  pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gateway",
+      "description": "Currently implemented Go gateway routes from thinkboard-backend/internal/httpapi/router.go. The /v1 route group requires Authorization: Bearer {{access_token}}. The gateway does not issue tokens; it verifies Supabase-issued JWTs and resolves the auth user to a profile_id through profile_identities.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_base_url}}/healthz"
+            },
+            "description": "Public liveness check. Expected response: { \"status\": \"ok\", \"time\": \"...\" }."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('health check succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status is ok', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me - Missing Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_base_url}}/v1/me"
+            },
+            "description": "Negative auth check for the gateway. Expected response: 401 { \"error\": \"missing bearer token\" }."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing token is rejected', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me - Authenticated",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_base_url}}/v1/me"
+            },
+            "description": "Protected gateway route. It verifies the Supabase JWT, resolves auth.users.id to public.profile_identities.profile_id, and returns { \"profile_id\": \"...\" }. If Supabase is issuing legacy HS256 tokens instead of JWKS-backed RS256/ES256 tokens, this request may return 401 until the backend verifier supports HS256."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('me request succeeded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('profile id returned', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.profile_id).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

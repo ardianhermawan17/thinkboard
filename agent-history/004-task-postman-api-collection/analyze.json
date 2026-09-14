@@ -1,0 +1,45 @@
+{
+  "task_id": "004-task-postman-api-collection",
+  "phase": "analyze",
+  "started_at": "2026-09-13T04:00:00Z",
+  "completed_at": "2026-09-13T04:05:00Z",
+  "sources_read": [
+    { "doc": "agent-history/running-process.json", "section": "full file" },
+    { "doc": "agent-history/001-task-backend-gateway-scaffolding/result.json", "section": "artifacts and follow-ups" },
+    { "doc": "agent-history/002-task-backend-supabase-login/result.json", "section": "cancelled login proxy and rollback note" },
+    { "doc": "agent-history/003-task-backend-auth-authorization/analyze.json", "section": "scope, acceptance criteria, open questions, risks" },
+    { "doc": "agent-history/003-task-backend-auth-authorization/code.json", "section": "files changed and commands run" },
+    { "doc": "agent-history/003-task-backend-auth-authorization/result.json", "section": "artifacts and follow-ups" },
+    { "doc": "thinkboard-backend/api/openapi.yaml", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/router.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/handler/health.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/handler/me.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/middleware/auth.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/auth/jwt.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/auth/authorizer.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/platform/config/config.go", "section": "full file" },
+    { "doc": "thinkboard-supabase/supabase/migrations/0002_auth_trigger.sql", "section": "full file" }
+  ],
+  "scope": "Create a Postman v2.1 collection JSON at thinkboard-backend/api/api.json. Include the current gateway endpoints (/healthz and /v1/me) and direct Supabase Auth helper requests for signup/signin/refresh/get-user/logout because the backend login proxy task was cancelled and authentication is owned by Supabase, not the gateway. Do not add or modify backend routes.",
+  "acceptance_criteria": [
+    {
+      "goal_id": "g1",
+      "text": "The collection reflects only implemented gateway routes from router.go: GET /healthz and GET /v1/me."
+    },
+    {
+      "goal_id": "g2",
+      "text": "The collection can be imported by Postman and uses variables for gateway_base_url, supabase_url, supabase_anon_key, email, password, access_token, and refresh_token."
+    },
+    {
+      "goal_id": "g3",
+      "text": "The collection descriptions explain that signup/signin call Supabase Auth directly and that the gateway only consumes Authorization: Bearer <access_token>."
+    }
+  ],
+  "open_questions": [
+    "The implemented JWT verifier only accepts Supabase JWKS-backed RS256/ES256 tokens. If the target Supabase project uses legacy HS256 JWTs, the Postman sign-in request will still produce a token but GET /v1/me will 401 until jwt.go gains an HS256 fallback."
+  ],
+  "risks": [
+    "Local Supabase Auth requires the anon key in Postman; the collection uses a placeholder variable because secrets should not be committed.",
+    "The current OpenAPI file only documents /healthz, so api.json is generated from the actual router and handler code rather than from OpenAPI alone."
+  ]
+}

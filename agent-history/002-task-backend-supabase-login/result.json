@@ -1,0 +1,22 @@
+{
+  "task_id": "002-task-backend-supabase-login",
+  "phase": "result",
+  "closed_at": "2026-09-13T01:35:00Z",
+  "final_status": "cancelled",
+  "rollback_note": "All files under 'artifacts' below (and the modifications to router.go/config.go/errs.go/main.go) were reverted on 2026-09-13 back to the 001-task-backend-gateway-scaffolding state, at the user's request, because this task's scope contradicted 03-backend-folder-architecture.md §1. Verified go build/vet/test clean post-revert (1 test, health only). Kept for audit trail per 02-working.md §1.",
+  "goals_summary": { "total": 4, "done": 4, "blocked": 0 },
+  "artifacts": [
+    "thinkboard-backend/internal/auth/supabase.go",
+    "thinkboard-backend/internal/httpapi/dto/auth.go",
+    "thinkboard-backend/internal/httpapi/handler/auth.go",
+    "thinkboard-backend/internal/httpapi/handler/auth_test.go",
+    "thinkboard-backend/internal/httpapi/router.go (modified)",
+    "thinkboard-backend/internal/platform/config/config.go (modified)",
+    "thinkboard-backend/internal/shared/errs/errs.go (modified)",
+    "thinkboard-backend/cmd/gateway/main.go (modified)"
+  ],
+  "follow_up_tasks": [
+    "Decide with the team whether POST /v1/auth/login stays permanently (dev/test convenience) or gets removed once apps/web exists and calls Supabase Auth directly, per §1's ownership table.",
+    "Implement the real internal/auth scope from §5.6 (jwt.go JWKS verification, authorizer.go, cache.go) — currently only the login proxy exists; nothing yet verifies a token on protected routes."
+  ]
+}

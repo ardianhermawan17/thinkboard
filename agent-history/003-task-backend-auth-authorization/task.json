@@ -1,0 +1,29 @@
+{
+  "id": "003-task-backend-auth-authorization",
+  "title": "Full internal/auth: Supabase JWT verification + team-membership authorization (RLS mirror)",
+  "architecture": "backend",
+  "secondary_architecture": ["supabase"],
+  "created_at": "2026-09-13T02:00:00Z",
+  "status": "done",
+  "depends_on": ["001-task-backend-gateway-scaffolding"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.6 internal/auth; §7.9 DB pool sizing; §6 middleware/{auth.go,authz.go}" },
+    { "doc": "thinkboard-schema-final.sql", "section": "current_profile_id(), is_team_member(), is_team_leader(), can_access_session(), team_members, team_role" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "Real shared/kernel ID types: AuthUserID, ProfileID, TeamID, SessionID", "plan_ref": "§5.7 shared/kernel", "status": "done" },
+    { "id": "g2", "description": "platform/postgres pgx/v5 pool construction per §7.9 (transaction-pooler-safe exec mode, pool sizing from config)", "plan_ref": "§7.9", "status": "done" },
+    { "id": "g3", "description": "auth/jwt.go: fetch+cache Supabase JWKS, verify RS256/ES256 JWT, extract sub as AuthUserID", "plan_ref": "§5.6 jwt.go", "status": "done" },
+    { "id": "g4", "description": "auth/authorizer.go: ResolveProfileID, IsTeamMember, IsTeamLeader, CanAccessSession — exact Go mirror of the schema's SQL helpers of the same names", "plan_ref": "§5.6 authorizer.go", "status": "done" },
+    { "id": "g5", "description": "auth/cache.go: TTL<=60s membership cache wrapping the authorizer, per §5.6", "plan_ref": "§5.6 cache.go", "status": "done" },
+    { "id": "g6", "description": "httpapi/middleware/auth.go (JWT->ProfileID on context) and authz.go (per-route team/session checks), wired as real Gin middleware", "plan_ref": "§6 middleware", "status": "done" },
+    { "id": "g7", "description": "One protected example route (GET /v1/me) proving the full chain end to end, plus unit tests for jwt verification, authorizer logic (fake DB), and cache TTL behavior", "plan_ref": "02-working.md §7.3 test evidence", "status": "done" }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}
