@@ -1,0 +1,14 @@
+{
+  "task_id": "006-task-document-supabase-login-swagger",
+  "phase": "test",
+  "test_files": [],
+  "commands_run": [
+    { "command": "go build ./... (thinkboard-backend)", "result": "success, no diff outside openapi.yaml" },
+    { "command": "go vet ./...", "result": "no issues found" },
+    { "command": "go test ./...", "result": "13 passed in 23 packages — unchanged from before this task, confirming zero code impact" },
+    { "command": "PyYAML parse of api/openapi.yaml", "result": "valid; paths = [/healthz, /v1/me, /auth/v1/token]; /auth/v1/token has its own servers override and security: []" },
+    { "command": "curl http://localhost:8080/openapi.yaml against the running gateway instance", "result": "200; response body includes the new /auth/v1/token block verbatim, confirming the static-file route serves the edited file live with no restart needed" }
+  ],
+  "summary": { "total": 13, "passed": 13, "failed": 0, "skipped": 1 },
+  "coverage_notes": "No new Go tests were needed — this task adds documentation only (openapi.yaml), so validation is YAML-structure + live-serving checks rather than unit tests. The pre-existing suite (including the still-skipped TestAuthFlowEndToEnd from task 005) is unaffected."
+}

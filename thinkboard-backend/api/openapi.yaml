@@ -57,6 +57,64 @@ paths:
                   error:
                     type: string
                     example: missing bearer token
+  /auth/v1/token:
+    servers:
+      - url: http://127.0.0.1:54321
+        description: Local Supabase Auth (GoTrue) — NOT served by this gateway.
+    post:
+      summary: "Sign in with email and password (Supabase, not this gateway)"
+      description: >
+        Reference only. This request is answered by Supabase Auth directly — the ThinkBoard
+        gateway does not issue tokens (03-backend-folder-architecture.md §1: auth issuance and
+        password flows are owned by the client talking to Supabase, not the gateway). Documented
+        here so the login step of the flow is visible in Swagger before calling the gateway's own
+        bearer-auth routes such as GET /v1/me. Matches api/api.json's "Sign In with Email and
+        Password" request.
+      security: []
+      parameters:
+        - name: grant_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [password]
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Supabase anon key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: bearer
+        "400":
+          description: Invalid credentials
 components:
   securitySchemes:
     bearerAuth:

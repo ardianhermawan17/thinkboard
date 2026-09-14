@@ -1,0 +1,20 @@
+{
+  "task_id": "006-task-document-supabase-login-swagger",
+  "phase": "code",
+  "started_at": "2026-09-14T02:05:00Z",
+  "completed_at": "2026-09-14T02:15:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/api/openapi.yaml", "action": "modified", "summary": "Added /auth/v1/token (POST, grant_type=password) as a reference-only path scoped to a per-path `servers` override (local Supabase URL), clearly labeled as not served by this gateway. No other paths/schemas touched." }
+  ],
+  "decisions": [
+    "Used OpenAPI's per-path `servers` array (not the top-level servers list) so Swagger UI visually separates this Supabase-side path from the gateway's own /healthz and /v1/me, instead of implying the gateway serves it.",
+    "security: [] on this path, matching /healthz — it authenticates the caller against Supabase directly via apikey/anon key, not via this gateway's bearerAuth scheme."
+  ],
+  "commands_run": [
+    "go build ./... (thinkboard-backend) — unaffected, doc-only change",
+    "go vet ./...",
+    "go test ./...",
+    "python3 script parsing openapi.yaml with PyYAML to confirm structure",
+    "curl against the already-running gateway instance to confirm it serves the updated spec live"
+  ]
+}

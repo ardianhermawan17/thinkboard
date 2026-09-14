@@ -1,0 +1,16 @@
+{
+  "task_id": "006-task-document-supabase-login-swagger",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "User explicitly chose 'Document Supabase's login in Swagger only' after being shown the 002 rollback precedent, in an AskUserQuestion this session." },
+    { "goal_id": "g2", "status": "pass", "notes": "openapi.yaml's /auth/v1/token path added with its own servers override (http://127.0.0.1:54321) and a description stating it is not served by this gateway; confirmed via PyYAML parse." },
+    { "goal_id": "g3", "status": "pass", "notes": "go build/vet/test all pass with the exact same 13/13 result as before this task; `git status` shows only api/openapi.yaml touched." },
+    { "goal_id": "g4", "status": "pass", "notes": "curl against the live running gateway confirms /openapi.yaml serves the new block; Swagger UI's index.html continues to load (swagger-ui markers present)." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 what the gateway does not own", "result": "No violation this time — no new gateway code was written; the login flow is documented, not implemented, by this service." },
+    { "doc": "agent-history/002-task-backend-supabase-login/result.json", "section": "follow_up_tasks", "result": "Answers the open 'should POST /v1/auth/login stay or go' question: it stays gone. The gateway does not and should not implement it; Supabase's own endpoint is documented instead." }
+  ],
+  "signed_off": true,
+  "issues_found": []
+}

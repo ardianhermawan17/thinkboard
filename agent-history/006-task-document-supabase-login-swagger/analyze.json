@@ -1,0 +1,22 @@
+{
+  "task_id": "006-task-document-supabase-login-swagger",
+  "phase": "analyze",
+  "started_at": "2026-09-14T02:00:00Z",
+  "completed_at": "2026-09-14T02:05:00Z",
+  "sources_read": [
+    { "doc": "agent-history/002-task-backend-supabase-login/task.json, analyze.json, validate.json, result.json", "section": "full - the prior rolled-back login proxy" },
+    { "doc": "03-backend-folder-architecture.md", "section": "§1 ownership table" },
+    { "doc": "thinkboard-backend/api/api.json", "section": "Supabase Auth > Sign In with Email and Password (existing Postman request this documents)" },
+    { "doc": "thinkboard-backend/api/openapi.yaml", "section": "full file, as left by 005-task-swagger-openapi-docs" }
+  ],
+  "scope": "openapi.yaml only. Add a documented, non-served reference path for Supabase's own POST /auth/v1/token?grant_type=password login endpoint, using OpenAPI's per-path `servers` override so Swagger UI clearly separates it from the gateway's own routes. No Go code, no new dependency, no router change.",
+  "acceptance_criteria": [
+    { "goal_id": "g2", "text": "openapi.yaml documents /auth/v1/token (POST, grant_type=password query param, apikey header, email/password body) under its own servers entry pointing at the local Supabase URL, with a description stating it is handled by Supabase, not this gateway." },
+    { "goal_id": "g3", "text": "go build/go vet/go test all still pass with zero diff outside api/openapi.yaml." },
+    { "goal_id": "g4", "text": "Running the gateway and hitting /swagger/index.html shows the new path grouped under the Supabase server." }
+  ],
+  "open_questions": [],
+  "risks": [
+    "Swagger UI's per-operation `servers` override is a display/grouping aid only — it does not make Swagger UI's 'Try it out' actually call Supabase correctly unless CORS on the local Supabase instance allows it; this is documentation, not a working test harness, and is presented to the user as such."
+  ]
+}
