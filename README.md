@@ -50,6 +50,8 @@ thinkboard-architecture/
 ├── 01-thinkboard-schema-rationale.md
 ├── 02-working.md
 ├── 03-backend-folder-architecture.md
+├── 04-TODO.md
+├── 05-agent-limitation.md
 ├── CLAUDE.md
 ├── thinkboard-schema-final.sql
 ├── agent-history/
@@ -76,7 +78,9 @@ The docs should be read in this order when implementing the project:
 3. [`01-thinkboard-schema-rationale.md`](./01-thinkboard-schema-rationale.md) — schema-to-plan cross-reference and notes on decisions not explicitly sourced from the plan.
 4. [`02-working.md`](./02-working.md) — mandatory agent work-tracking process for implementation tasks.
 5. [`03-backend-folder-architecture.md`](./03-backend-folder-architecture.md) — planned Go gateway package structure, import rules, transport model, concurrency model, and build order.
-6. [`CLAUDE.md`](./CLAUDE.md) — repository-specific instructions for coding agents.
+6. [`04-TODO.md`](./04-TODO.md) — how the `agent-thinking/todo` contract workflow turns a human prompt into a tracked task, and its relation to `agent-history`.
+7. [`05-agent-limitation.md`](./05-agent-limitation.md) — hard limits on what an agent may do unattended, especially around git write commands.
+8. [`CLAUDE.md`](./CLAUDE.md) — repository-specific instructions for coding agents.
 
 Archived/superseded drafts:
 
