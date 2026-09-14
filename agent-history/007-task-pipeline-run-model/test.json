@@ -1,0 +1,15 @@
+{
+  "task_id": "007-task-pipeline-run-model",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/pipeline/run_test.go"
+  ],
+  "commands_run": [
+    { "command": "go vet ./...", "result": "no issues" },
+    { "command": "go test ./internal/pipeline/... -v", "result": "PASS — TestRunStart, TestRunAdvance, TestRunFail, TestRunCancel plus task 006's TestAllowed/TestOrderIsCanonicalSequence; 36 tests total in the pipeline package, all passed" },
+    { "command": "go test ./... -v", "result": "PASS — 49 tests across the whole module" },
+    { "command": "go build ./...", "result": "success" }
+  ],
+  "summary": { "total": 49, "passed": 49, "failed": 0, "skipped": 0 },
+  "coverage_notes": "Per 02-working.md §7.3, pipeline-stage transitions cannot reach validate with zero automated tests. run_test.go covers Start from every RunStatus (1 valid + 4 rejected), Advance across all 6 forward steps plus the auto-done edge case plus rejection from every non-running status, and Fail/Cancel from every status (2 valid + 3 terminal-rejected each)."
+}

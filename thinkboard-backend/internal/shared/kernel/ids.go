@@ -13,3 +13,6 @@ type TeamID string
 
 // SessionID is sessions.id.
 type SessionID string
+
+// RunID is pipeline_runs.id.
+type RunID string

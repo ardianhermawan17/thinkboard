@@ -1,0 +1,26 @@
+{
+  "task_id": "007-task-pipeline-run-model",
+  "phase": "analyze",
+  "started_at": "2026-09-14T01:00:00Z",
+  "completed_at": "2026-09-14T01:10:00Z",
+  "sources_read": [
+    { "doc": "thinkboard-schema-final.sql", "section": "session_mode/run_status enums (lines 17, 32), pipeline_runs table (lines 245-254)" },
+    { "doc": "03-backend-folder-architecture.md", "section": "§4 import rules (clock rule, pure-file rule); §5.1 pipeline/ file tree + run.go description; §7.2 sequential-by-data-dependency; §10 build order step 3" },
+    { "doc": "02-working.md", "section": "§7.3 test-phase rule" },
+    { "doc": "thinkboard-backend/internal/shared/clock/clock.go", "section": "full file — Clock interface, sole allowed time.Now() source" },
+    { "doc": "thinkboard-backend/internal/shared/kernel/ids.go", "section": "full file — existing strong-ID-type convention (AuthUserID, ProfileID, TeamID, SessionID)" },
+    { "doc": "thinkboard-backend/internal/pipeline/stage.go", "section": "full file (task 006 output) — Stage type + Order, reused as the stage cursor's domain and the only order source" },
+    { "doc": "thinkboard-backend/internal/pipeline/transition.go", "section": "full file (task 006 output) — Allowed()/indexOf() pattern reused for next-stage lookup" }
+  ],
+  "scope": "New Go domain types only, in internal/pipeline: RunStatus, Mode, Run struct (ID, SessionID, Mode, Status, CurrentStage, StartedAt, FinishedAt), and pure Start/Advance/Fail/Cancel invariant methods, plus a new kernel.RunID strong ID type. No orchestrator, no service.go, no store/persistence, no Gin/HTTP, no LLM, no time.Now() calls (caller supplies 'now', matching shared/clock's Clock.Now() contract). Table-driven tests only, pure behavior.",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "RunStatus constants match run_status enum exactly: pending, running, done, failed, cancelled. Mode constants match session_mode exactly: planning, descriptive, visualize." },
+    { "goal_id": "g2", "text": "Run struct fields map 1:1 to pipeline_runs columns relevant to in-memory state (id, session_id, mode, status, started_at, finished_at) plus CurrentStage as the in-process stage cursor (not a DB column — pipeline_stages rows track per-stage persistence, out of scope)." },
+    { "goal_id": "g3", "text": "Start(now): pending->running only, sets CurrentStage=pipeline.Order[0], StartedAt=now. Advance(now): running only, moves CurrentStage to pipeline.Order[i+1]; when CurrentStage is already the last stage, transitions Status->done and sets FinishedAt instead (confirmed with user: no separate Finish/Complete method). Fail(now)/Cancel(now): any non-terminal status -> failed/cancelled, sets FinishedAt; no reason argument (confirmed with user: pipeline_runs has no error column, so Fail/Cancel stay bare). All four return a single sentinel ErrInvalidTransition on misuse; none call time.Now() internally." },
+    { "goal_id": "g4", "text": "run_test.go table-driven, covering: Start from pending (ok) and from every other status (error); Advance through all 6 forward steps plus auto-done from result; Advance while not running (error); Fail/Cancel from pending and running (ok) and from each terminal status (error). go test passes." }
+  ],
+  "open_questions": [],
+  "risks": [
+    "CurrentStage's zero value (empty string) represents 'not yet started' — before Start() is called, Run.CurrentStage is not a valid pipeline.Stage. Documented via a zero-value comment on the field rather than a separate wrapper type, to avoid introducing an Optional[Stage] abstraction nothing else needs yet."
+  ]
+}

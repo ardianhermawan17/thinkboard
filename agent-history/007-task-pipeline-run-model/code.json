@@ -1,0 +1,23 @@
+{
+  "task_id": "007-task-pipeline-run-model",
+  "phase": "code",
+  "started_at": "2026-09-14T01:10:00Z",
+  "completed_at": "2026-09-14T01:25:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/internal/shared/kernel/ids.go", "action": "modified", "summary": "Added RunID (pipeline_runs.id), following the existing strong-ID-type convention rather than defining an ID type locally in pipeline/." },
+    { "path": "thinkboard-backend/internal/pipeline/run.go", "action": "created", "summary": "RunStatus (mirrors run_status enum), Mode (mirrors session_mode enum), ErrInvalidTransition sentinel, Run struct, and NewRun/Start/Advance/Fail/Cancel — all pure, no I/O, caller-supplied 'now'." },
+    { "path": "thinkboard-backend/internal/pipeline/run_test.go", "action": "created", "summary": "Table-driven tests: Start (pending ok, all other statuses rejected), Advance (all 6 forward steps + auto-done on the last stage, rejected when not running), Fail/Cancel (pending+running ok, all 3 terminal statuses rejected)." }
+  ],
+  "decisions": [
+    "Advance() auto-completes the run (Status -> done, FinishedAt set) when called while CurrentStage is already the last stage in Order, instead of adding a 5th Complete/Finish method — confirmed with user before coding.",
+    "Fail()/Cancel() take no reason/error argument, matching pipeline_runs having no such column — confirmed with user before coding.",
+    "Reused pipeline.Order/indexOf from task 006 for next-stage lookup instead of re-deriving stage sequence, keeping Order the single order source across both tasks."
+  ],
+  "commands_run": [
+    "gofmt -l -w internal/pipeline internal/shared/kernel",
+    "go vet ./...",
+    "go test ./... -v",
+    "go test ./internal/pipeline/... -v",
+    "go build ./..."
+  ]
+}
