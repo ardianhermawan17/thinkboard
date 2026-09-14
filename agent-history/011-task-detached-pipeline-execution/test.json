@@ -1,0 +1,18 @@
+{
+  "task_id": "011-task-detached-pipeline-execution",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/pipeline/service_test.go",
+    "thinkboard-backend/internal/shared/concurrency/semaphore_test.go",
+    "thinkboard-backend/internal/shared/concurrency/supervisor_test.go"
+  ],
+  "commands_run": [
+    { "command": "go build ./...", "result": "success" },
+    { "command": "go vet ./...", "result": "no issues" },
+    { "command": "go test -race -v ./internal/pipeline/... ./internal/shared/concurrency/...", "result": "PASS -- 21 pipeline tests (9 in service_test.go, 7 hub, 3 RunContext, plus point/run/temperature/transition suites) + 6 concurrency tests (2 semaphore, 4 supervisor), all pass under -race with zero warnings" },
+    { "command": "go test -race ./... (whole module)", "result": "PASS -- every package with tests (auth, httpapi, httpapi/handler, pipeline, shared/concurrency) passes; packages with no test files reported as such, none failed" },
+    { "command": "go test -race -count=8 ./internal/pipeline/... ./internal/shared/concurrency/...", "result": "PASS x8 -- run repeatedly specifically to rule out flakiness in the new hub-subscription-based synchronization (waitForTerminal) and the new Supervisor/Semaphore concurrency tests; no failures across 8 iterations" }
+  ],
+  "summary": { "total": 27, "passed": 27, "failed": 0, "skipped": 0 },
+  "coverage_notes": "This task touches pipeline-stage-adjacent orchestration (not transition.go itself, which is unchanged) and goroutine ownership/concurrency, which 03-backend-folder-architecture.md §8 explicitly calls out as needing -race coverage regardless of whether the 02-working.md §7.3 'pipeline-stage transitions or context-warning heuristic' auto-trigger technically applies. New coverage: StartRun returns before the run completes (gated LLM + started-signal synchronization, no sleeps); caller-context-cancellation-after-return has no effect on the run; a panic inside the LLM call is recovered, marks the run failed, and publishes run.failed without crashing the test process; the full run.started -> stage.completed{analytic} event sequence is published and observable both live and via late-subscriber replay; MaxConcurrentRuns=1 causes a second concurrent run to be admitted as pending without starting a goroutine. Supervisor coverage: fn actually runs, a panicking fn doesn't crash the process and still lets Shutdown drain, Shutdown cancels every tracked context and blocks until they finish, Shutdown honors its own deadline when a fn ignores cancellation, and 20 concurrent Go()+Shutdown() calls are -race-clean. No bare `go` outside shared/concurrency exists in internal/pipeline/*.go (verified by grep; the two bare `go func` hits are both in hub_test.go's pre-existing concurrent test harness from task 010, not production code)."
+}

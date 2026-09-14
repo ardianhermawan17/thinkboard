@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-14T06:00:00Z",
+  "updated_at": "2026-09-15T06:00:00Z",
   "current_task_id": null,
   "current_phase": "idle",
-  "history_path": "agent-history/010-task-pipeline-sse-hub",
+  "history_path": "agent-history/011-task-detached-pipeline-execution",
   "status": "idle",
   "task_sequence": [
     { "id": "001-task-backend-gateway-scaffolding", "architecture": "backend", "status": "done", "title": "Backend folder structure + Gin scaffolding in thinkboard-backend/" },
@@ -16,6 +16,7 @@
     { "id": "007-task-pipeline-run-model", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Run, RunStatus, stage cursor, start/advance/fail/cancel invariants (pipeline-domain-core)" },
     { "id": "008-task-pipeline-value-objects", "architecture": "backend", "status": "done", "title": "Pipeline domain core: Temperature VO, Point parent/child shape (pipeline-domain-core)" },
     { "id": "009-task-start-run-analytic-stub", "architecture": "backend", "status": "done", "title": "StartRun service + stubbed analytic stage, fake LLM dependency (build order step 4)" },
-    { "id": "010-task-pipeline-sse-hub", "architecture": "backend", "status": "done", "title": "SSE run hub: detached context, reattach, bounded buffers, slow-subscriber drop (build order step 5) — code+tests done; -race verification unblocked by installing a C toolchain (scoop gcc) and reran clean with CGO_ENABLED=1" }
+    { "id": "010-task-pipeline-sse-hub", "architecture": "backend", "status": "done", "title": "SSE run hub: detached context, reattach, bounded buffers, slow-subscriber drop (build order step 5) — code+tests done; -race verification unblocked by installing a C toolchain (scoop gcc) and reran clean with CGO_ENABLED=1" },
+    { "id": "011-task-detached-pipeline-execution", "architecture": "backend", "status": "blocked", "title": "Detach pipeline run execution: Supervisor + admission semaphore + Orchestrator publishing to Hub (build order step 5, remainder) — code+tests done (8/9 goals); g9 blocked on main.go SIGTERM wiring, which needs task 012's router DI + a real LLM impl first" }
   ]
 }

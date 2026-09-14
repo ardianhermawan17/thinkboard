@@ -1,0 +1,32 @@
+{
+  "id": "011-task-detached-pipeline-execution",
+  "title": "Detach pipeline run execution from the HTTP request via Supervisor + Hub publishing",
+  "architecture": "backend",
+  "secondary_architecture": [],
+  "created_at": "2026-09-14T22:49:43Z",
+  "status": "blocked",
+  "depends_on": ["010-task-pipeline-sse-hub", "009-task-start-run-analytic-stub"],
+  "plan_refs": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§5.1 pipeline/ (orchestrator.go); §5.7 shared/concurrency (supervisor.go, semaphore.go); §7.1 concurrency rules; §7.5 streaming/detached run context; §7.7 admission control; §7.10 graceful shutdown; §9 build order step 5; §10 item 5 (detached run contexts, abandonment policy)" },
+    { "doc": "00-thinkboard-abstract-plan.md", "section": "Stack decision table ('goroutines handle many concurrent streaming sessions cheaply'); §9 build order step 2 note on the Analytic-stage-vs-stubbed-LLM skeleton this task extends" },
+    { "doc": "02-working.md", "section": "§5 architecture categorization; §6 goal tracking; §7 workflow rules" }
+  ],
+  "goals": [
+    { "id": "g1", "description": "StartRun's synchronous, request-cancellable part (validation) stays on reqCtx; everything after handoff runs on RunContext(reqCtx, budget) = context.WithoutCancel + WithTimeout, never the bare request context", "plan_ref": "03-backend-folder-architecture.md §7.5", "status": "done" },
+    { "id": "g2", "description": "Cancelling the caller's context after StartRun returns has no effect on the run (unit test)", "plan_ref": "03-backend-folder-architecture.md §7.5; 011 prompt §4.1", "status": "done" },
+    { "id": "g3", "description": "The pipeline run goroutine is started only via shared/concurrency.Supervisor.Go; no bare `go` exists anywhere in internal/pipeline", "plan_ref": "03-backend-folder-architecture.md §7.1 rule 1", "status": "done" },
+    { "id": "g4", "description": "A panic inside the run (orchestrator/stage execution) is recovered, the run is marked failed, and a run.failed hub event is published, without crashing the process", "plan_ref": "011 prompt §3.2-§3.3; §4 guarantee 5", "status": "done" },
+    { "id": "g5", "description": "Hub events are published for every lifecycle transition the currently-implemented pipeline slice actually reaches (run.started, stage.completed{analytic}, run.failed, run.cancelled), regardless of subscriber presence -- scoped down from the full 7-stage/run.completed list in the 011 prompt because only the analytic stage has a real handler (build order step 8 adds the rest); see analyze.json open_questions", "plan_ref": "011 prompt §6 g5 (scoped); 03-backend-folder-architecture.md §9 build order step 8", "status": "done" },
+    { "id": "g6", "description": "A subscriber that attaches after the run has already published events receives the missed events via the existing hub ring-buffer replay", "plan_ref": "011 prompt §6 g6; 03-backend-folder-architecture.md §7.5", "status": "done" },
+    { "id": "g7", "description": "MaxConcurrentRuns is enforced via a semaphore acquired before handoff; a run started over the limit is admitted (status pending) and does not start a goroutine until implemented capacity exists", "plan_ref": "03-backend-folder-architecture.md §7.7; 011 prompt §6 g7", "status": "done" },
+    { "id": "g8", "description": "go test -race ./internal/pipeline/... ./internal/shared/concurrency/... passes, covering cancellation, panic recovery, and subscriber drop", "plan_ref": "03-backend-folder-architecture.md §7.1 rule 5, §8; 011 prompt §8", "status": "done" },
+    { "id": "g9", "description": "Supervisor.Shutdown cancels every tracked run context and blocks until they drain or its own deadline passes, as a directly-tested mechanism; end-to-end SIGTERM wiring through cmd/gateway/main.go is deferred until a task actually constructs Service/Supervisor there (task 012+ per its own router-DI scope), since no real LLM implementation exists yet to wire in production", "plan_ref": "03-backend-folder-architecture.md §7.10; 011 prompt §4 guarantee 6, §6 g9", "status": "blocked", "blocked_reason": "The Supervisor.Shutdown mechanism itself is fully implemented and -race tested (supervisor_test.go). What's NOT done is wiring it into cmd/gateway/main.go's actual SIGTERM handler, because main.go does not construct a pipeline.Service anywhere yet -- there is no real internal/llm implementation to give it (build order step 6, after this task) and internal/httpapi.NewRouter doesn't accept pipeline dependencies yet (that DI change is task 012's explicit scope). Wiring Shutdown into main.go today would be dead code calling Shutdown on a Supervisor nothing ever uses. Deliberately left for whichever task first constructs Service in main.go." }
+  ],
+  "phases": {
+    "analyze": { "file": "analyze.json", "status": "done" },
+    "code": { "file": "code.json", "status": "done" },
+    "test": { "file": "test.json", "status": "done" },
+    "validate": { "file": "validate.json", "status": "done" },
+    "result": { "file": "result.json", "status": "done" }
+  }
+}

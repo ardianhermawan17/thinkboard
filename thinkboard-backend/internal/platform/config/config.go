@@ -27,6 +27,16 @@ type Config struct {
 	DBMinConns        int32
 	DBMaxConnLifetime time.Duration
 	DBMaxConnIdleTime time.Duration
+
+	// MaxRunDuration bounds a detached pipeline run's own execution budget -- the run's context is
+	// context.WithoutCancel(reqCtx) plus this timeout, never the bare request context (§7.1 rule 4,
+	// §7.5). The actual disposition for a run that hits this budget is a pilot-team product
+	// decision, not decided here (see 011-task-detached-pipeline-execution/analyze.json).
+	MaxRunDuration time.Duration
+
+	// MaxConcurrentRuns caps in-flight pipeline runs admitted per gateway instance before StartRun
+	// queues instead of starting a goroutine (§7.7 admission control).
+	MaxConcurrentRuns int64
 }
 
 // Load reads Config from the environment, applying defaults for local dev (`supabase start`).
@@ -48,6 +58,9 @@ func Load() Config {
 		DBMinConns:        8,
 		DBMaxConnLifetime: 30 * time.Minute,
 		DBMaxConnIdleTime: 5 * time.Minute,
+
+		MaxRunDuration:    15 * time.Minute, // §7.5's own worked example figure
+		MaxConcurrentRuns: 24,               // §7.9 worked budget, per gateway instance
 	}
 }
 
