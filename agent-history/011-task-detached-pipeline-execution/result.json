@@ -1,0 +1,25 @@
+{
+  "task_id": "011-task-detached-pipeline-execution",
+  "phase": "result",
+  "closed_at": "2026-09-15T06:00:00Z",
+  "final_status": "blocked",
+  "goals_summary": { "total": 9, "done": 8, "blocked": 1 },
+  "artifacts": [
+    "thinkboard-backend/internal/shared/concurrency/semaphore.go",
+    "thinkboard-backend/internal/shared/concurrency/semaphore_test.go",
+    "thinkboard-backend/internal/shared/concurrency/supervisor.go",
+    "thinkboard-backend/internal/shared/concurrency/supervisor_test.go",
+    "thinkboard-backend/internal/shared/concurrency/doc.go",
+    "thinkboard-backend/internal/pipeline/event.go",
+    "thinkboard-backend/internal/pipeline/orchestrator.go",
+    "thinkboard-backend/internal/pipeline/service.go",
+    "thinkboard-backend/internal/pipeline/service_test.go",
+    "thinkboard-backend/internal/platform/config/config.go"
+  ],
+  "follow_up_tasks": [
+    "012-task-run-http-sse-contract (its own dependency check on 011 is now satisfied -- StartRun detaches, Supervisor owns the goroutine, Orchestrator publishes to Hub; the HTTP/SSE transport layer can now be built on top)",
+    "Wire pipeline.Service/Hub/Supervisor into cmd/gateway/main.go and call Supervisor.Shutdown from the real SIGTERM sequence -- blocked on task 012's router DI change and a real internal/llm implementation (build order step 6); this is g9's documented blocked_reason, not new scope.",
+    "Build order step 8 (remaining 5 stages via a stages.Registry()): extend or replace Orchestrator.Run once research/validation/questioning/research_scoped/result have real handlers, at which point run.completed can finally be published honestly.",
+    "Add a queue-drain mechanism for runs admitted over MaxConcurrentRuns -- today a queued run stays 'pending' forever with no worker to start it once a slot frees (validate.json issues_found)."
+  ]
+}
