@@ -1,0 +1,19 @@
+{
+  "task_id": "005-task-swagger-openapi-docs",
+  "phase": "test",
+  "test_files": [
+    "thinkboard-backend/internal/httpapi/auth_e2e_test.go"
+  ],
+  "commands_run": [
+    { "command": "go build ./... (thinkboard-backend)", "result": "success" },
+    { "command": "go vet ./... (thinkboard-backend)", "result": "no issues found" },
+    { "command": "go test ./... (thinkboard-backend)", "result": "13 passed in 23 packages (TestAuthFlowEndToEnd included, self-skipped)" },
+    { "command": "go test ./internal/httpapi/... -run TestAuthFlowEndToEnd -v (via rtk proxy, unfiltered)", "result": "SKIP: SUPABASE_ANON_KEY not set; run `supabase start` and export the local anon key to exercise this test -- PASS overall (clean skip, not an error)" },
+    { "command": "manual: built gateway binary, ran it, curl /swagger/index.html", "result": "200" },
+    { "command": "manual: curl /openapi.yaml", "result": "200" },
+    { "command": "manual: curl /healthz", "result": "200 {\"status\":\"ok\",...}" },
+    { "command": "manual: curl /v1/me with no Authorization header", "result": "401 (matches openapi.yaml's documented response)" }
+  ],
+  "summary": { "total": 13, "passed": 13, "failed": 0, "skipped": 1 },
+  "coverage_notes": "TestAuthFlowEndToEnd (the new admin@gmail.com/password test required by the task) could not be exercised live in this session: `supabase status` fails here because Docker Desktop's Linux engine is unreachable in this environment, so there is no local Supabase/Postgres stack to sign in against. The test is written to skip cleanly with a diagnostic message rather than fail, verified via -run/-v above. It must be re-run with `supabase start` plus `SUPABASE_ANON_KEY=<local anon key> go test ./...` in an environment with Docker before this goal can be considered live-verified end to end, not just compiled and skip-tested."
+}

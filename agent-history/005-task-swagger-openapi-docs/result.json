@@ -1,0 +1,17 @@
+{
+  "task_id": "005-task-swagger-openapi-docs",
+  "phase": "result",
+  "closed_at": "2026-09-14T01:00:00Z",
+  "final_status": "done",
+  "goals_summary": { "total": 4, "done": 4, "blocked": 0 },
+  "artifacts": [
+    "thinkboard-backend/api/openapi.yaml",
+    "thinkboard-backend/internal/httpapi/router.go",
+    "thinkboard-backend/internal/httpapi/auth_e2e_test.go",
+    "thinkboard-backend/go.mod",
+    "thinkboard-backend/go.sum"
+  ],
+  "follow_up_tasks": [
+    "Re-run `go test ./... ` for thinkboard-backend with `supabase start` running and SUPABASE_ANON_KEY exported, to get a live (not just skip-verified) pass on TestAuthFlowEndToEnd."
+  ]
+}

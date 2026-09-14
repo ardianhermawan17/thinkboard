@@ -1,0 +1,39 @@
+{
+  "task_id": "005-task-swagger-openapi-docs",
+  "phase": "analyze",
+  "started_at": "2026-09-14T00:00:00Z",
+  "completed_at": "2026-09-14T00:10:00Z",
+  "sources_read": [
+    { "doc": "README.md", "section": "full file" },
+    { "doc": "CLAUDE.md", "section": "full file" },
+    { "doc": "02-working.md", "section": "full contract" },
+    { "doc": "04-TODO.md", "section": "full file" },
+    { "doc": "05-agent-limitation.md", "section": "full file (git write + shadow branch rules)" },
+    { "doc": "agent-thinking/todo/005-todo-swagger-backend-api/contract.json", "section": "full contract" },
+    { "doc": "agent-thinking/tracking-todo.json", "section": "005 entry" },
+    { "doc": "agent-history/running-process.json", "section": "full file, before this task" },
+    { "doc": "thinkboard-backend/api/api.json", "section": "full file (existing Postman collection)" },
+    { "doc": "thinkboard-backend/api/openapi.yaml", "section": "full file (existing /healthz-only stub)" },
+    { "doc": "thinkboard-backend/internal/httpapi/router.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/handler/me.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/handler/health.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/httpapi/middleware/auth.go", "section": "full file" },
+    { "doc": "thinkboard-backend/internal/platform/config/config.go", "section": "full file" },
+    { "doc": "thinkboard-backend/go.mod", "section": "full file (no swagger deps installed yet)" }
+  ],
+  "scope": "thinkboard-backend only. Extend api/openapi.yaml to the real current route surface (/healthz, /v1/me), install a Swagger UI package and mount it in router.go, verify api/api.json (Postman collection) still matches those routes, and add one integration test covering Supabase sign-in with admin@gmail.com/password through to GET /v1/me. No new backend routes/features, no frontend or Supabase migration work, no change to api.json's existing Postman format.",
+  "acceptance_criteria": [
+    { "goal_id": "g1", "text": "openapi.yaml documents GET /healthz and GET /v1/me (200/401 responses, bearerAuth security scheme) matching the actual handler behavior in health.go and me.go." },
+    { "goal_id": "g2", "text": "router.go serves an interactive Swagger UI (via an installed gin-swagger-style package) at a /swagger route reading api/openapi.yaml; go build succeeds with the new dependency." },
+    { "goal_id": "g3", "text": "api/api.json's Gateway section (Health Check, Me - Missing Token, Me - Authenticated) is checked line-by-line against router.go/me.go/health.go and updated only if it has drifted; format stays Postman v2.1, per the user's explicit answer to the AskUserQuestion in this session (\"Keep Postman, sync with routes\")." },
+    { "goal_id": "g4", "text": "A Go test exists that performs a real Supabase Auth sign-in (or sign-up-then-sign-in) with admin@gmail.com/password, then calls the gateway's GET /v1/me with the resulting bearer token and asserts 200 + a profile_id, using the same NewRouter/config wiring as production." }
+  ],
+  "open_questions": [
+    "RESOLVED via AskUserQuestion this session: api.json is a Postman collection, not OpenAPI. User chose 'Keep Postman, sync with routes' — openapi.yaml stays the Swagger/OpenAPI source of truth, api.json keeps its Postman format and is only checked/synced against current routes.",
+    "The task instruction's admin@gmail.com/password user is not seeded anywhere in this repo (no fixture/migration creates it). Treated as: the test itself performs Supabase sign-up (idempotent, tolerating 'already registered') then sign-in, rather than assuming a pre-seeded account."
+  ],
+  "risks": [
+    "No local Supabase/Postgres stack is reachable in this environment (`supabase status` fails: Docker Desktop's Linux engine pipe is not available here), so the new integration test cannot be executed live in this session. It is written to skip cleanly (with a clear message) when SUPABASE_URL/DATABASE_URL are unreachable, and must be re-run with `supabase start` + `go test ./...` in an environment with Docker.",
+    "Adding a new Go module dependency for Swagger UI touches go.mod/go.sum — kept to the smallest well-known option (gin-swagger + swaggo/files) rather than the full swag codegen toolchain, since openapi.yaml is hand-maintained, not annotation-generated."
+  ]
+}

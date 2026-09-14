@@ -1,0 +1,19 @@
+{
+  "task_id": "005-task-swagger-openapi-docs",
+  "phase": "validate",
+  "goal_checks": [
+    { "goal_id": "g1", "status": "pass", "notes": "openapi.yaml now documents GET /healthz (200) and GET /v1/me (200/401, bearerAuth) matching health.go and me.go exactly; validated by manual curl against a running instance." },
+    { "goal_id": "g2", "status": "pass", "notes": "gin-swagger + swaggo/files installed; GET /swagger/index.html returned 200 and GET /openapi.yaml returned 200 against a locally built binary." },
+    { "goal_id": "g3", "status": "pass", "notes": "api/api.json's Gateway folder (Health Check, Me - Missing Token, Me - Authenticated) re-checked line-by-line against router.go/me.go/health.go: no drift found, no edit needed. Format kept as Postman v2.1 per the user's explicit choice in this session." },
+    { "goal_id": "g4", "status": "pass", "notes": "TestAuthFlowEndToEnd added, compiles, go vet clean, and was run with -v to confirm it skips cleanly (not silently, not erroring) when SUPABASE_ANON_KEY/Supabase/Postgres are unavailable, which is the case in this sandbox (no Docker). Live pass/fail against a real admin@gmail.com/password sign-in has NOT been observed in this session and needs a `supabase start` environment to confirm end to end." }
+  ],
+  "cross_check_against_plan": [
+    { "doc": "03-backend-folder-architecture.md", "section": "§6 httpapi (router.go is the only file that knows URLs; handlers stay thin)", "result": "Router remains the single place new routes are declared; no handler logic added, only static/UI routes and imports." },
+    { "doc": "agent-thinking/todo/005-todo-swagger-backend-api/contract.json", "section": "translated_prompt_agent steps 1-3", "result": "Step 1 done (Swagger UI + extended spec). Step 2's ambiguity resolved via AskUserQuestion (kept Postman format, synced/verified against routes, no drift found). Step 3 done (test added, but live-unverified per g4 note above)." },
+    { "doc": "05-agent-limitation.md", "section": "§1-2 git write confirmation + shadow branch", "result": "No git commit/push/merge performed in this task; all changes are uncommitted working-tree edits pending explicit user confirmation." }
+  ],
+  "signed_off": true,
+  "issues_found": [
+    "g4 is functionally complete (code correct, compiles, skips cleanly) but not live-verified in this sandbox due to no local Docker/Supabase stack — flagged here rather than silently treated as fully proven, per this task's own risk log."
+  ]
+}

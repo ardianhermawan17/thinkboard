@@ -4,6 +4,8 @@ package httpapi
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"thinkboard-backend/internal/auth"
 	"thinkboard-backend/internal/httpapi/handler"
@@ -19,6 +21,12 @@ func NewRouter(cfg config.Config, db *pgxpool.Pool) *gin.Engine {
 
 	health := &handler.HealthHandler{Clock: clock.Real}
 	r.GET("/healthz", health.Health)
+
+	// Swagger UI reads the hand-maintained spec directly — no swag codegen (api/openapi.yaml is
+	// the source of truth per 03-backend-folder-architecture.md §6). The spec is served outside
+	// /swagger/ because gin's router rejects a static file sibling under a catch-all prefix.
+	r.StaticFile("/openapi.yaml", "api/openapi.yaml")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/openapi.yaml")))
 
 	verifier := auth.NewVerifier(cfg.SupabaseURL)
 	authorizer := auth.NewCachedAuthorizer(auth.NewAuthorizer(db), cfg.MembershipCacheTTL, clock.Real)

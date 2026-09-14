@@ -1,0 +1,26 @@
+{
+  "task_id": "005-task-swagger-openapi-docs",
+  "phase": "code",
+  "started_at": "2026-09-14T00:10:00Z",
+  "completed_at": "2026-09-14T00:45:00Z",
+  "files_changed": [
+    { "path": "thinkboard-backend/go.mod", "action": "modified", "summary": "go get github.com/swaggo/files@latest github.com/swaggo/gin-swagger@latest" },
+    { "path": "thinkboard-backend/go.sum", "action": "modified", "summary": "Checksums for the new Swagger UI dependency tree." },
+    { "path": "thinkboard-backend/api/openapi.yaml", "action": "modified", "summary": "Replaced the /healthz-only stub with the real surface: GET /healthz and GET /v1/me (200/401 schemas), plus a bearerAuth securityScheme." },
+    { "path": "thinkboard-backend/internal/httpapi/router.go", "action": "modified", "summary": "Serve api/openapi.yaml at GET /openapi.yaml and mount gin-swagger's UI at GET /swagger/*any pointed at it." },
+    { "path": "thinkboard-backend/internal/httpapi/auth_e2e_test.go", "action": "created", "summary": "Integration test: Supabase sign-up/sign-in for admin@gmail.com/password, then GET /v1/me through the real router+pool; skips cleanly when Supabase/Postgres/SUPABASE_ANON_KEY are unavailable." }
+  ],
+  "decisions": [
+    "Used gin-swagger + swaggo/files (UI only) instead of the full swag annotation/codegen toolchain, so the hand-maintained openapi.yaml stays the single source of truth instead of being regenerated from Go comments.",
+    "The Swagger UI route is /swagger/*any and the raw spec is served at the top-level /openapi.yaml, not /swagger/openapi.yaml — gin's radix router rejects a static file as a sibling of a catch-all under the same path prefix (confirmed by a runtime panic during manual testing, fixed by moving the spec route out of /swagger/).",
+    "api/api.json (Postman collection) was checked against router.go/me.go/health.go and left unchanged — its Health Check, Me - Missing Token, and Me - Authenticated requests already match the current route surface exactly. Per the user's explicit answer in this session, its Postman format was kept as-is rather than redefined as OpenAPI.",
+    "admin@gmail.com/password is not seeded anywhere in this repo, so the new test performs an idempotent Supabase sign-up (ignoring an 'already registered' response) before signing in, rather than assuming a pre-existing fixture user."
+  ],
+  "commands_run": [
+    "go get github.com/swaggo/files@latest github.com/swaggo/gin-swagger@latest",
+    "go build ./...",
+    "go vet ./...",
+    "go build -o <tmp>/gateway_test ./cmd/gateway",
+    "manual smoke test: ran the built binary and curled /swagger/index.html, /openapi.yaml, /healthz, /v1/me"
+  ]
+}
