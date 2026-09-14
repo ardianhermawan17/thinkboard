@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-14T00:00:00Z",
+  "tracked_todos": [
+    {
+      "id": "005-todo-swagger-backend-api",
+      "name": "Add Swagger to backend and implement api.json",
+      "goal": "Document the backend's real route surface via OpenAPI/Swagger and reconcile thinkboard-backend/api/api.json with it, validated by a test login using admin@gmail.com / password.",
+      "todo_path": "agent-thinking/todo/005-todo-swagger-backend-api/contract.json",
+      "agent_history": null,
+      "status": "pending"
+    }
+  ]
+}
